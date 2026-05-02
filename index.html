@@ -137,16 +137,23 @@
 
         /* --- Custom PDF Buttons on Last Slide --- */
         .pdf-controls {
-            opacity: 0.1;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            opacity: 0.05; /* شبه مخفية تماماً */
             transition: opacity 0.3s ease;
+            z-index: 100;
         }
         .pdf-controls:hover {
-            opacity: 1;
+            opacity: 1; /* تظهر عند تمرير الماوس */
         }
         .pdf-btn {
-            background: rgba(255, 255, 255, 0.8); border: 1px solid #cbd5e1;
-            color: #475569; font-size: 0.8rem; font-weight: 600; padding: 4px 8px;
-            border-radius: 4px; cursor: pointer; transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.9); border: 1px solid #cbd5e1;
+            color: #475569; font-size: 0.8rem; font-weight: 600; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .pdf-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
 
@@ -634,7 +641,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             </div>
 
             <!-- Semi-hidden PDF Controls (Hover to see) -->
-            <div class="absolute bottom-[-150px] right-0 flex gap-2 pdf-controls">
+            <div class="absolute bottom-4 right-4 flex gap-2 pdf-controls z-50">
                 <button onclick="prepareAndPrint(1)" class="pdf-btn">PDF (1x)</button>
                 <button onclick="prepareAndPrint(2)" class="pdf-btn">PDF (2x)</button>
             </div>
