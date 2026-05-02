@@ -10,7 +10,7 @@
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-            svg: { fontCache: 'global' }
+            svg: { fontCache: 'none' }
         };
     </script>
     <!-- MathJax for rendering mathematical equations -->
@@ -138,24 +138,15 @@
 
         /* --- Custom PDF Buttons on Last Slide --- */
         .pdf-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            opacity: 0.1; /* شبه مخفية تماماً */
-            transition: opacity 0.3s ease;
-            z-index: 100;
+            position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
+            opacity: 0.1; transition: opacity 0.3s ease; z-index: 100;
         }
-        .pdf-controls:hover {
-            opacity: 1; /* تظهر عند تمرير الماوس */
-        }
+        .pdf-controls:hover { opacity: 1; }
         .pdf-btn {
             background: rgba(255, 255, 255, 0.9); border: 1px solid #cbd5e1;
             color: #475569; font-size: 0.9rem; font-weight: bold; padding: 8px 16px;
             border-radius: 6px; cursor: pointer; transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 6px;
         }
         .pdf-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
         .pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -173,6 +164,18 @@
             animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SAFE EXPORT MODE (Removes heavy effects during PDF generation to prevent hanging) */
+        .pdf-export-mode * {
+            transition: none !important;
+            animation: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+        .pdf-export-mode .glass-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
     </style>
 </head>
 <body>
@@ -180,9 +183,9 @@
 <!-- Loading Overlay for PDF Generation -->
 <div id="pdf-loader">
     <div class="spinner"></div>
-    <h2 class="text-3xl font-bold mb-2">Generating PDF...</h2>
+    <h2 class="text-3xl font-bold mb-2">Generating Professional PDF...</h2>
     <p id="pdf-progress" class="text-xl text-blue-300">Capturing Slide 1 of 12</p>
-    <p class="text-sm text-slate-400 mt-4">Please wait, taking high-quality snapshots.</p>
+    <p class="text-sm text-slate-400 mt-4">This might take a few moments.</p>
 </div>
 
 <div id="progress-container"><div id="progress-bar"></div></div>
@@ -526,7 +529,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             </div>
 
             <div class="glass-card p-4 flex-grow">
-                <div class="chart-grid" id="chart-capture-area">
+                <div class="chart-grid">
                     <div class="chart-box">
                         <canvas id="chartTimeOrg"></canvas>
                     </div>
@@ -680,12 +683,10 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     document.addEventListener('keydown', function(event) {
         if (event.target.id === 'fc-slider') return; 
         
-        // Go forward on Right Arrow or Spacebar
         if ((event.key === 'ArrowRight' || event.code === 'Space') && currentSlide < slides.length - 1) {
-            if (event.code === 'Space') event.preventDefault(); // Prevent scrolling down on Space
+            if (event.code === 'Space') event.preventDefault(); 
             changeSlide(1);
         }
-        // Go backward on Left Arrow
         else if (event.key === 'ArrowLeft' && currentSlide > 0) {
             changeSlide(-1);
         }
@@ -802,7 +803,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
     // --- NEW: Professional High-Quality PDF Export (Image-based) ---
     async function generateHighQualityPDF() {
-        // Prevent multiple clicks
         const btn = document.getElementById('pdf-btn-download');
         const btnText = document.getElementById('pdf-text');
         const loader = document.getElementById('pdf-loader');
@@ -810,85 +810,71 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         
         btn.disabled = true;
         loader.style.display = 'flex';
+        document.body.classList.add('pdf-export-mode'); // إيقاف كل الحركات والتأثيرات الزجاجية مؤقتاً لتجنب التهنيج
         
         const originalSlideIndex = currentSlide;
         
-        // Initialize jsPDF (Landscape, format matches typical 16:9 Presentation 1920x1080)
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-            orientation: 'landscape',
-            unit: 'px',
-            format: [1920, 1080]
-        });
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1920, 1080] });
 
-        // Make sure charts are ready
         if (!chartsInitialized) {
             initCharts();
             updateChartsData(20);
             chartsInitialized = true;
         }
 
-        // Loop through all slides
         for (let i = 0; i < slides.length; i++) {
             progressText.innerText = `Capturing Slide ${i + 1} of ${slides.length}...`;
             
-            // Show only the current slide for capturing
             slides.forEach((s, idx) => {
                 if (idx === i) {
                     s.style.display = 'flex';
                     s.style.opacity = '1';
-                    s.style.transform = 'translateY(0) scale(1)';
+                    s.style.transform = 'none';
                     s.classList.add('active');
                 } else {
                     s.style.display = 'none';
-                    s.style.opacity = '0';
-                    s.classList.remove('active');
                 }
             });
 
-            // Wait a moment for MathJax and Charts to settle visually
-            await new Promise(r => setTimeout(r, 400));
+            // انتظار قصير جدًا لأننا أوقفنا الحركات
+            await new Promise(r => setTimeout(r, 150));
 
-            // Hide UI elements we don't want in the PDF
             document.getElementById('progress-container').style.display = 'none';
             document.querySelector('.controls-wrapper').style.display = 'none';
             if(i === slides.length - 1) {
                 document.querySelector('.pdf-controls').style.display = 'none';
             }
 
-            // Capture the slide as an image using html2canvas
+            // التصوير بدقة متوسطة (Scale 1.5) لمنع انهيار الذاكرة
             const canvas = await html2canvas(slides[i], {
-                scale: 2, // High resolution
+                scale: 1.5,
                 useCORS: true,
                 backgroundColor: '#f8fafc',
-                logging: false
+                logging: false,
+                width: 1920,
+                height: 1080,
+                windowWidth: 1920,
+                windowHeight: 1080
             });
 
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            // ضغط الصورة قليلاً
+            const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
-            // Add new page for slides after the first one
-            if (i > 0) {
-                doc.addPage([1920, 1080], 'landscape');
-            }
-            
-            // Add image to PDF
+            if (i > 0) doc.addPage([1920, 1080], 'landscape');
             doc.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
 
-            // Restore UI elements
             document.getElementById('progress-container').style.display = 'block';
             document.querySelector('.controls-wrapper').style.display = 'flex';
-            if(i === slides.length - 1) {
-                document.querySelector('.pdf-controls').style.display = 'flex';
-            }
         }
 
         progressText.innerText = "Saving PDF file...";
         await new Promise(r => setTimeout(r, 200));
 
-        // Save the PDF
         doc.save('Fourier_Series_Presentation.pdf');
 
-        // Restore original state
+        // إعادة العرض لحالته الطبيعية
+        document.body.classList.remove('pdf-export-mode');
         loader.style.display = 'none';
         btn.disabled = false;
         
@@ -905,6 +891,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 s.classList.remove('active');
             }
         });
+        document.querySelector('.pdf-controls').style.display = 'flex';
         slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
         updateProgress();
     }
