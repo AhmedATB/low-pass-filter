@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fourier Series & LPF Presentation</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configure MathJax BEFORE loading it to ensure inline math works perfectly -->
+    
+    <!-- Configure MathJax BEFORE loading it -->
     <script>
         window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
-            },
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
             svg: { fontCache: 'global' }
         };
     </script>
     <!-- MathJax for rendering mathematical equations -->
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
+    <!-- Chart.js for Live Interactive Plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Modern Premium Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,74 +26,35 @@
     
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --accent: #3b82f6;
-            --bg-color: #f8fafc;
-            --text-main: #0f172a;
-            --text-muted: #475569;
+            --primary: #2563eb; --primary-dark: #1e40af; --accent: #3b82f6;
+            --bg-color: #f8fafc; --text-main: #0f172a; --text-muted: #475569;
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 0; overflow: hidden;
             background-image: 
                 radial-gradient(at 0% 0%, hsla(217,100%,94%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 100%, hsla(217,100%,92%,1) 0, transparent 50%);
         }
 
         /* Progress Bar */
-        #progress-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-            background: #e2e8f0;
-            z-index: 100;
-        }
-        #progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-            width: 0%;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: #e2e8f0; z-index: 100; }
+        #progress-bar { height: 100%; background: linear-gradient(90deg, #3b82f6, #1d4ed8); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .slide-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
+        .slide-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
 
         .slide {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            padding: 5% 8%;
-            box-sizing: border-box;
-            display: none;
-            opacity: 0;
-            transform: translateY(20px) scale(0.98);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 5% 8%; box-sizing: border-box; display: none;
+            opacity: 0; transform: translateY(20px) scale(0.98);
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow-y: auto; overflow-x: hidden;
         }
 
-        .slide.active {
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            z-index: 10;
-        }
+        .slide.active { display: flex; flex-direction: column; opacity: 1; transform: translateY(0) scale(1); z-index: 10; }
 
         /* Custom Modern Scrollbar */
         .slide::-webkit-scrollbar { width: 6px; }
@@ -100,158 +62,98 @@
         .slide::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .slide::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        .content { 
-            position: relative; 
-            width: 100%; 
-            max-width: 1400px;
-            margin: 0 auto; 
-            height: auto; 
-            z-index: 2;
-        }
+        .content { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; height: auto; z-index: 2; }
         
         .slide-title {
-            color: var(--primary-dark);
-            font-weight: 800;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            position: relative;
-            display: inline-block;
+            color: var(--primary-dark); font-weight: 800; margin-bottom: 2rem;
+            letter-spacing: -0.02em; position: relative; display: inline-block;
         }
         
         .slide-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60%;
-            height: 5px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            border-radius: 5px;
+            content: ''; position: absolute; bottom: -8px; left: 0; width: 60%;
+            height: 5px; background: linear-gradient(90deg, var(--primary), transparent); border-radius: 5px;
         }
 
         /* Premium IDE-like Code Block */
         .code-block {
             font-family: 'Consolas', 'Courier New', monospace;
-            background: #0f172a; /* Deep dark slate */
-            color: #e2e8f0;
-            padding: 1.5rem 2rem;
-            border-radius: 12px;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border: 1px solid #1e293b;
-            font-size: 1rem;
-            line-height: 1.6;
-            position: relative;
+            background: #0f172a; color: #e2e8f0; padding: 1.5rem 2rem;
+            border-radius: 12px; white-space: pre-wrap; overflow-x: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border: 1px solid #1e293b; font-size: 1rem; line-height: 1.6; position: relative;
         }
         
-        /* Mac-like buttons on code block */
         .code-block::before {
-            content: '';
-            display: block;
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background: #ef4444;
-            box-shadow: 20px 0 0 #f59e0b, 40px 0 0 #10b981;
-            margin-bottom: 1rem;
+            content: ''; display: block; width: 12px; height: 12px; border-radius: 50%;
+            background: #ef4444; box-shadow: 20px 0 0 #f59e0b, 40px 0 0 #10b981; margin-bottom: 1rem;
         }
 
         @media (min-width: 768px) { .code-block { font-size: 1.1rem; } }
         
-        .code-keyword { color: #c678dd; } /* Purple */
-        .code-function { color: #61afef; } /* Blue */
-        .code-number { color: #d19a66; } /* Orange */
-        .code-string { color: #98c379; } /* Green */
-        .code-comment { color: #64748b; font-style: italic; } /* Muted slate */
+        .code-keyword { color: #c678dd; } .code-function { color: #61afef; }
+        .code-number { color: #d19a66; } .code-string { color: #98c379; }
+        .code-comment { color: #64748b; font-style: italic; }
 
         /* Glassmorphism Cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); border-radius: 16px;
         }
         
         .controls-wrapper {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 90px;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
             background: linear-gradient(to top, rgba(248, 250, 252, 1) 40%, rgba(248, 250, 252, 0));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 50;
-            padding: 0 5%;
-            pointer-events: none; /* Let clicks pass through transparent parts */
+            display: flex; justify-content: space-between; align-items: center; z-index: 50; padding: 0 5%; pointer-events: none;
         }
         
-        .controls {
-            display: flex;
-            gap: 15px;
-            pointer-events: auto; /* Re-enable clicks for buttons */
-        }
+        .controls { display: flex; gap: 15px; pointer-events: auto; }
 
         button {
-            background-color: var(--bg-color); 
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            padding: 10px 24px; 
-            border-radius: 8px;
-            cursor: pointer; 
-            font-weight: 700; 
-            transition: all 0.3s ease;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background-color: var(--bg-color); color: var(--primary); border: 2px solid var(--primary);
+            padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; 
+            transition: all 0.3s ease; font-size: 1rem; display: flex; align-items: center; gap: 8px;
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
         }
         
         button:hover:not(:disabled) { 
-            background-color: var(--primary); 
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+            background-color: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
         }
         
-        button:disabled { 
-            border-color: #cbd5e1;
-            color: #94a3b8;
-            cursor: not-allowed; 
-            box-shadow: none;
-        }
+        button:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
         
         .slide-number {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--primary-dark);
-            background: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            pointer-events: auto;
+            font-weight: 700; font-size: 1.1rem; color: var(--primary-dark); background: white;
+            padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); pointer-events: auto;
         }
 
-        /* Staggered animation for lists */
-        .stagger-item {
-            opacity: 0;
-            transform: translateX(-20px);
-            transition: all 0.5s ease forwards;
-        }
+        .stagger-item { opacity: 0; transform: translateX(-20px); transition: all 0.5s ease forwards; }
         .slide.active .stagger-item:nth-child(1) { transition-delay: 0.2s; opacity: 1; transform: translateX(0); }
         .slide.active .stagger-item:nth-child(2) { transition-delay: 0.4s; opacity: 1; transform: translateX(0); }
         .slide.active .stagger-item:nth-child(3) { transition-delay: 0.6s; opacity: 1; transform: translateX(0); }
+        
+        /* Chart container styling */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            height: 60vh;
+            min-height: 500px;
+        }
+        .chart-box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+        }
     </style>
 </head>
 <body>
 
-<div id="progress-container">
-    <div id="progress-bar"></div>
-</div>
+<div id="progress-container"><div id="progress-bar"></div></div>
 
 <div class="slide-container" id="presentation">
 
@@ -336,7 +238,6 @@
             <div class="glass-card p-8 md:p-14 w-full text-center mb-10 shadow-lg relative overflow-hidden group">
                 <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                 <p class="relative z-10 text-slate-900" style="font-size: 2.2rem; min-width: 300px;">
-                    <!-- Fixed MathJax rendering here -->
                     $$ f(t) = \frac{4A}{\pi} \sum_{n=1,3,5,...}^{N} \frac{1}{n} \sin(n \omega_0 t) $$
                 </p>
             </div>
@@ -359,7 +260,6 @@
                         Key Variables
                     </h3>
                     <ul class="space-y-4 text-xl text-slate-700">
-                        <!-- Fixed inline math formatting and symbol -->
                         <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>\(\omega_0 = 2\pi f_0\) :</strong> Angular frequency (rad/s)</li>
                         <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>\(f_0 = 10 \text{ Hz}\) :</strong> Fundamental frequency</li>
                         <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>t:</strong> Time variable (seconds)</li>
@@ -425,37 +325,27 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 6: Results -->
+    <!-- Slide 6: Results (LIVE PLOTS) -->
     <div class="slide">
-        <div class="content flex flex-col h-full min-h-[500px]">
-            <h2 class="slide-title text-4xl md:text-5xl mb-4">Results: MATLAB Output</h2>
-            <div class="flex-grow flex flex-col items-center justify-center glass-card border-2 border-dashed border-blue-300 rounded-2xl p-4 md:p-6 relative">
-                <!-- Placeholder for the MATLAB image -->
-                <div class="absolute inset-0 flex flex-col items-center justify-center z-0 opacity-40 pointer-events-none">
-                    <svg class="w-24 h-24 text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <p class="font-bold text-2xl text-slate-500 text-center">
-                        [Insert MATLAB Figure Here]<br>
-                        <span class="text-lg font-normal">Scale to fit this entire box</span>
-                    </p>
-                </div>
-                
-                <!-- Frame overlay to show layout expectation -->
-                <div class="w-full h-full border border-slate-200 bg-white/60 rounded-xl flex flex-col z-10 backdrop-blur-sm shadow-sm">
-                    <div class="flex-1 flex flex-col md:flex-row border-b border-slate-200">
-                        <div class="flex-1 border-b md:border-b-0 md:border-r border-slate-200 flex items-center justify-center p-4">
-                            <span class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">Synthesized Square Wave (Time)</span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center p-4">
-                            <span class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">Original Spectrum (FFT)</span>
-                        </div>
+        <div class="content flex flex-col h-full">
+            <h2 class="slide-title text-4xl md:text-5xl mb-4">Results: Live Interactive Output</h2>
+            <div class="glass-card p-4 flex-grow">
+                <div class="chart-grid">
+                    <!-- Chart 1: Time Domain (Original) -->
+                    <div class="chart-box">
+                        <canvas id="chartTimeOrg"></canvas>
                     </div>
-                    <div class="flex-1 flex flex-col md:flex-row">
-                        <div class="flex-1 border-b md:border-b-0 md:border-r border-slate-200 flex items-center justify-center p-4">
-                            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">Filtered Signal (Sine Wave)</span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center p-4">
-                            <span class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">Filtered Spectrum (Only 10Hz)</span>
-                        </div>
+                    <!-- Chart 2: Freq Domain (Original) -->
+                    <div class="chart-box">
+                        <canvas id="chartFreqOrg"></canvas>
+                    </div>
+                    <!-- Chart 3: Time Domain (Filtered) -->
+                    <div class="chart-box">
+                        <canvas id="chartTimeFilt"></canvas>
+                    </div>
+                    <!-- Chart 4: Freq Domain (Filtered) -->
+                    <div class="chart-box">
+                        <canvas id="chartFreqFilt"></canvas>
                     </div>
                 </div>
             </div>
@@ -511,12 +401,14 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 </div>
 
 <script>
+    // --- Presentation Navigation Logic ---
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const slideNum = document.getElementById('slideNum');
     const progressBar = document.getElementById('progress-bar');
+    let chartsRendered = false; // Flag to render charts only once
 
     function updateProgress() {
         const progress = (currentSlide / (slides.length - 1)) * 100;
@@ -524,57 +416,131 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     }
 
     function changeSlide(direction) {
-        // Fade out current slide
         slides[currentSlide].style.opacity = '0';
         slides[currentSlide].style.transform = direction > 0 ? 'translateY(-20px) scale(0.98)' : 'translateY(20px) scale(0.98)';
         
         setTimeout(() => {
             slides[currentSlide].classList.remove('active');
-            
             currentSlide += direction;
-            
-            // Boundaries
             if (currentSlide < 0) currentSlide = 0;
             if (currentSlide >= slides.length) currentSlide = slides.length - 1;
             
             slides[currentSlide].classList.add('active');
-            
-            // Trigger reflow for animation
-            void slides[currentSlide].offsetWidth;
-            
-            // Fade in new slide
+            void slides[currentSlide].offsetWidth; // trigger reflow
             slides[currentSlide].style.opacity = '1';
             slides[currentSlide].style.transform = 'translateY(0) scale(1)';
-            
-            // Reset scroll position
             slides[currentSlide].scrollTop = 0;
             
-            // Update UI elements
             prevBtn.disabled = currentSlide === 0;
             nextBtn.disabled = currentSlide === slides.length - 1;
             slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
             updateProgress();
             
-            // Rerender MathJax just in case it was hidden
-            if (window.MathJax) {
-                MathJax.typesetPromise();
+            if (window.MathJax) MathJax.typesetPromise();
+            
+            // Render charts if we reach slide 6 (index 5)
+            if (currentSlide === 5 && !chartsRendered) {
+                renderLiveCharts();
+                chartsRendered = true;
             }
-        }, 300); // Wait for fade out
+        }, 300);
     }
     
-    // Initial setup
     updateProgress();
     slides[currentSlide].style.opacity = '1';
     slides[currentSlide].style.transform = 'translateY(0) scale(1)';
     
-    // Keyboard navigation
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'ArrowRight' && currentSlide < slides.length - 1) {
-            changeSlide(1);
-        } else if (event.key === 'ArrowLeft' && currentSlide > 0) {
-            changeSlide(-1);
-        }
+        if (event.key === 'ArrowRight' && currentSlide < slides.length - 1) changeSlide(1);
+        else if (event.key === 'ArrowLeft' && currentSlide > 0) changeSlide(-1);
     });
+
+    // --- Live Data Generation & Chart Rendering Logic ---
+    function renderLiveCharts() {
+        // 1. Math Generation (Simulating MATLAB)
+        const fs = 1000;
+        const numPoints = 500; // 0.5 seconds at 1000Hz
+        const t = Array.from({length: numPoints}, (_, i) => i / fs);
+        const f0 = 10;
+        const w0 = 2 * Math.PI * f0;
+        const A = 1;
+        const N_harmonics = 15;
+
+        // Generate Time Domain Original Signal
+        const x_fourier = t.map(time => {
+            let sum = 0;
+            for(let n = 1; n <= N_harmonics; n += 2) {
+                sum += (1/n) * Math.sin(n * w0 * time);
+            }
+            return (4 * A / Math.PI) * sum;
+        });
+
+        // Generate Time Domain Filtered Signal (Assuming ideal LPF at 20Hz -> only 10Hz fundamental remains)
+        const y_filtered = t.map(time => (4 * A / Math.PI) * Math.sin(w0 * time));
+
+        // Generate Frequency Domain Data
+        const freqs = Array.from({length: 16}, (_, i) => i * 10); // 0 to 150 Hz
+        const x_mag = freqs.map(f => {
+            if (f % 20 === 10 && f <= N_harmonics * 10) return (4 * A / (Math.PI * (f / 10)));
+            return 0;
+        });
+        
+        // Filtered spectrum (Only 10Hz passes)
+        const y_mag = freqs.map(f => f === 10 ? (4 * A / Math.PI) : 0);
+
+        // Chart.js Default Configs
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#475569';
+        
+        const commonLineOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+            scales: {
+                x: { title: { display: true, text: 'Time (s)', font: { weight: 'bold' } }, grid: { display: false } },
+                y: { min: -1.5, max: 1.5, title: { display: true, text: 'Amplitude', font: { weight: 'bold' } } }
+            },
+            elements: { point: { radius: 0 } },
+            animation: { duration: 1500, easing: 'easeOutQuart' }
+        };
+
+        const commonBarOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+            scales: {
+                x: { title: { display: true, text: 'Frequency (Hz)', font: { weight: 'bold' } }, grid: { display: false } },
+                y: { min: 0, max: 1.4, title: { display: true, text: 'Magnitude', font: { weight: 'bold' } } }
+            },
+            animation: { duration: 1500, easing: 'easeOutQuart', delay: 500 }
+        };
+
+        // Render Chart 1: Time Original
+        new Chart(document.getElementById('chartTimeOrg'), {
+            type: 'line',
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Synthesized Square Wave', data: x_fourier, borderColor: '#0f172a', borderWidth: 2 }] },
+            options: commonLineOptions
+        });
+
+        // Render Chart 2: Freq Original
+        new Chart(document.getElementById('chartFreqOrg'), {
+            type: 'bar',
+            data: { labels: freqs, datasets: [{ label: 'Original Spectrum (FFT)', data: x_mag, backgroundColor: '#0f172a', barThickness: 4, borderRadius: 2 }] },
+            options: commonBarOptions
+        });
+
+        // Render Chart 3: Time Filtered
+        new Chart(document.getElementById('chartTimeFilt'), {
+            type: 'line',
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Filtered Signal (LPF, fc = 20Hz)', data: y_filtered, borderColor: '#ef4444', borderWidth: 2 }] },
+            options: commonLineOptions
+        });
+
+        // Render Chart 4: Freq Filtered
+        new Chart(document.getElementById('chartFreqFilt'), {
+            type: 'bar',
+            data: { labels: freqs, datasets: [{ label: 'Filtered Spectrum', data: y_mag, backgroundColor: '#ef4444', barThickness: 4, borderRadius: 2 }] },
+            options: commonBarOptions
+        });
+    }
 </script>
 
 </body>
