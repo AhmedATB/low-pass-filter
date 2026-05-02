@@ -119,7 +119,7 @@
             background-color: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
         }
         
-        button:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+        button:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .slide-number {
             font-weight: 700; font-size: 1.1rem; color: var(--primary-dark); background: white;
@@ -146,6 +146,45 @@
         }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
+
+        /* --- Print Specific Styles for PDF Generation --- */
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { 
+                background: white !important; 
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            #progress-container, .controls-wrapper, .bg-pattern { display: none !important; }
+            .slide-container { 
+                height: auto !important; 
+                width: 100% !important; 
+                overflow: visible !important; 
+                display: block !important; 
+            }
+            .slide {
+                position: relative !important;
+                display: flex !important;
+                opacity: 1 !important;
+                transform: none !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                padding: 4% 6% !important;
+                overflow: hidden !important;
+            }
+            .slide:last-child { page-break-after: auto !important; }
+            .stagger-item { opacity: 1 !important; transform: none !important; }
+            
+            /* Ensure charts print properly */
+            .chart-grid { display: grid !important; height: 60vh !important; }
+            canvas { max-width: 100% !important; height: 100% !important; }
+            
+            /* Remove shadows for cleaner print */
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+        }
     </style>
 </head>
 <body>
@@ -499,6 +538,11 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 Next
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
             </button>
+            <!-- NEW PRINT PDF BUTTON -->
+            <button id="printBtn" onclick="prepareAndPrint()" class="!bg-slate-800 !text-white !border-slate-800 hover:!bg-slate-700 ml-4">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Save PDF
+            </button>
         </div>
         <div class="slide-number" id="slideNum">1 / 10</div>
     </div>
@@ -684,18 +728,34 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         });
 
         // 3. Update Chart Instances
-        chartTimeOrg.data.datasets[0].data = x_fourier;
-        chartTimeOrg.update('none'); // 'none' means instant update without animation
+        if(chartTimeOrg) {
+            chartTimeOrg.data.datasets[0].data = x_fourier;
+            chartTimeOrg.update('none'); // 'none' means instant update without animation
 
-        chartFreqOrg.data.datasets[0].data = x_mag;
-        chartFreqOrg.update('none');
+            chartFreqOrg.data.datasets[0].data = x_mag;
+            chartFreqOrg.update('none');
 
-        chartTimeFilt.data.datasets[0].data = y_filtered;
-        chartTimeFilt.data.datasets[0].label = `Filtered Signal (LPF, fc = ${cutoffFreq}Hz)`;
-        chartTimeFilt.update('none');
+            chartTimeFilt.data.datasets[0].data = y_filtered;
+            chartTimeFilt.data.datasets[0].label = `Filtered Signal (LPF, fc = ${cutoffFreq}Hz)`;
+            chartTimeFilt.update('none');
 
-        chartFreqFilt.data.datasets[0].data = y_mag;
-        chartFreqFilt.update('none');
+            chartFreqFilt.data.datasets[0].data = y_mag;
+            chartFreqFilt.update('none');
+        }
+    }
+
+    // Print to PDF function
+    function prepareAndPrint() {
+        // Ensure charts are initialized before printing
+        if (!chartsInitialized) {
+            initCharts();
+            updateChartsData(20);
+            chartsInitialized = true;
+        }
+        // Small delay to allow canvas elements to finish rendering
+        setTimeout(() => {
+            window.print();
+        }, 500);
     }
 </script>
 
