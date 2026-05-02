@@ -133,47 +133,18 @@
         
         /* Chart container styling */
         .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 1.5rem;
-            width: 100%;
-            height: 55vh;
-            min-height: 400px;
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 1.5rem; width: 100%; height: 55vh; min-height: 400px;
         }
-        .chart-box {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            position: relative;
-        }
+        .chart-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         
         /* Custom range slider */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            margin-top: -8px;
-            box-shadow: 0 2px 6px rgba(37,99,235,0.4);
-            border: 3px solid white;
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: #2563eb; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(37,99,235,0.4); border: 3px solid white;
         }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 8px;
-            cursor: pointer;
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
     </style>
 </head>
@@ -295,7 +266,51 @@
         </div>
     </div>
 
-    <!-- Slide 4: Code - Synthesis -->
+    <!-- Slide 4: NEW - Anatomy & Gibbs Phenomenon -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Harmonic Anatomy & Gibbs Phenomenon</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                <!-- Left Column: The Concept -->
+                <div class="glass-card p-8 flex flex-col justify-center">
+                    <h3 class="font-extrabold text-2xl text-blue-800 mb-4">Building the Square Wave</h3>
+                    <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                        A square wave is not a single entity; it's a sum of infinite sine waves:
+                    </p>
+                    <ul class="space-y-4 text-lg text-slate-700 mb-6">
+                        <li class="flex gap-3"><span class="text-blue-500 font-bold">1.</span> <strong>Fundamental (\(f_0\)):</strong> Dictates the main frequency and period.</li>
+                        <li class="flex gap-3"><span class="text-blue-500 font-bold">2.</span> <strong>Higher Harmonics (\(3f_0, 5f_0...\)):</strong> Flatten the peaks and steepen the vertical transition edges.</li>
+                    </ul>
+                    
+                    <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                        <h4 class="font-bold text-red-700 text-xl mb-2">The Gibbs Phenomenon</h4>
+                        <p class="text-slate-700">Notice the "ringing" or overshoots at the sharp edges of our synthesized wave. Mathematically, no matter how many harmonics (N) we add, a ~9% overshoot will always exist at the jump discontinuities.</p>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Visual Equation (Decorative) -->
+                <div class="glass-card p-8 flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-indigo-900 text-white relative overflow-hidden">
+                    <div class="absolute opacity-10 right-0 top-0 w-64 h-64">
+                        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M0,50 Q25,0 50,50 T100,50"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-2xl mb-8 z-10 text-blue-200">Visualizing the Summation</h3>
+                    <div class="text-center z-10 space-y-4">
+                        <p class="text-2xl font-mono">$$\sin(\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">+</p>
+                        <p class="text-2xl font-mono">$$\frac{1}{3}\sin(3\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">+</p>
+                        <p class="text-2xl font-mono">$$\frac{1}{5}\sin(5\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">...</p>
+                        <div class="mt-6 pt-6 border-t border-blue-500/50">
+                            <p class="text-xl italic text-blue-100">"The more harmonics we add, the sharper the edges become."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Code - Synthesis -->
     <div class="slide">
         <div class="content">
             <h2 class="slide-title text-4xl md:text-5xl">MATLAB Code: Synthesis</h2>
@@ -323,7 +338,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 5: Code - FFT & Filter -->
+    <!-- Slide 6: Code - FFT & Filter -->
     <div class="slide">
         <div class="content">
             <h2 class="slide-title text-4xl md:text-5xl">MATLAB Code: FFT & Filtering</h2>
@@ -351,7 +366,44 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 6: Results (LIVE PLOTS WITH SLIDER) -->
+    <!-- Slide 7: NEW - Practical Filtering (Ideal vs Butterworth) -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Practical Filtering: The Butterworth Choice</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <div class="glass-card p-6 border-t-4 border-blue-500">
+                        <h3 class="font-bold text-xl text-blue-900 mb-2">Ideal vs. Real Filters</h3>
+                        <p class="text-slate-700 text-lg">An "Ideal" filter (Brick-wall) cuts off frequencies instantly at \(f_c\). However, this is mathematically impossible to implement in real-time causal systems. Practical filters have a <strong>Transition Band (Roll-off)</strong>.</p>
+                    </div>
+                    
+                    <div class="glass-card p-6 border-t-4 border-indigo-500">
+                        <h3 class="font-bold text-xl text-indigo-900 mb-2">Why Butterworth?</h3>
+                        <p class="text-slate-700 text-lg">We selected the Butterworth filter because it is designed to have a <strong>"Maximally Flat"</strong> passband. It introduces no ripples to our passed frequencies, preserving the shape of our 10Hz fundamental perfectly.</p>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="glass-card p-8 flex flex-col justify-center bg-slate-50 border border-slate-200">
+                    <div class="text-center mb-6">
+                        <h3 class="font-bold text-2xl text-slate-800 mb-2">The Roll-off Effect</h3>
+                        <p class="text-slate-600 text-lg">Using a 4th-Order Filter (\(n=4\))</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-inner text-center">
+                        <p class="text-xl text-slate-700 mb-4">The attenuation rate is:</p>
+                        <p class="text-3xl font-extrabold text-blue-600 mb-4">\(-24 \text{ dB/octave}\)</p>
+                        <p class="text-lg text-slate-600 italic">
+                            "This explains why a frequency like 30Hz (close to the 20Hz cutoff) is heavily reduced, but not instantly zeroed out. Higher filter orders would create a steeper drop."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Results (LIVE PLOTS WITH SLIDER) -->
     <div class="slide">
         <div class="content flex flex-col h-full">
             <h2 class="slide-title text-4xl md:text-5xl mb-2">Results: Live Interactive Filter</h2>
@@ -379,7 +431,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 7: Conclusion -->
+    <!-- Slide 9: Conclusion -->
     <div class="slide">
         <div class="content">
             <h2 class="slide-title text-4xl md:text-5xl">Conclusion</h2>
@@ -411,7 +463,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 8: Q&A / Thank You -->
+    <!-- Slide 10: Q&A / Thank You -->
     <div class="slide">
         <div class="content flex flex-col justify-center items-center h-full text-center mt-12 md:mt-20">
             <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-8 shadow-inner animate-bounce" style="animation-duration: 3s;">
@@ -426,7 +478,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             
             <p class="text-2xl text-slate-700 mb-12 max-w-3xl leading-relaxed">
                 We appreciate your time and attention.<br> 
-                <span class="font-semibold">We are now open to any questions</span> 
+                <span class="font-semibold">We are now open to any questions</span> regarding the mathematical synthesis, MATLAB implementation, or the live filter demonstration.
             </p>
             
             <div class="glass-card px-10 py-5 inline-flex items-center gap-4 shadow-lg border-blue-200">
@@ -448,7 +500,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
             </button>
         </div>
-        <div class="slide-number" id="slideNum">1 / 8</div>
+        <div class="slide-number" id="slideNum">1 / 10</div>
     </div>
 </div>
 
@@ -498,17 +550,14 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             slides[currentSlide].scrollTop = 0;
             
             prevBtn.disabled = currentSlide === 0;
-            
-            // If we are on the very last slide, maybe change the "Next" button text or disable it.
             nextBtn.disabled = currentSlide === slides.length - 1;
-            
             slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
             updateProgress();
             
             if (window.MathJax) MathJax.typesetPromise();
             
-            // Initialize charts if we reach slide 6 (index 5)
-            if (currentSlide === 5 && !chartsInitialized) {
+            // Initialize charts if we reach slide 8 (index 7)
+            if (currentSlide === 7 && !chartsInitialized) {
                 initCharts();
                 updateChartsData(20); // Default to 20Hz
                 chartsInitialized = true;
@@ -652,4 +701,3 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
 </body>
 </html>
-```
