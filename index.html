@@ -103,23 +103,8 @@
         .controls-wrapper {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
             background: linear-gradient(to top, rgba(248, 250, 252, 1) 40%, rgba(248, 250, 252, 0));
-            display: flex; justify-content: space-between; align-items: center; z-index: 50; padding: 0 5%; pointer-events: none;
+            display: flex; justify-content: flex-end; align-items: center; z-index: 50; padding: 0 5%; pointer-events: none;
         }
-        
-        .controls { display: flex; gap: 15px; pointer-events: auto; }
-
-        button {
-            background-color: var(--bg-color); color: var(--primary); border: 2px solid var(--primary);
-            padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; 
-            transition: all 0.3s ease; font-size: 1rem; display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
-        }
-        
-        button:hover:not(:disabled) { 
-            background-color: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
-        }
-        
-        button:disabled { border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .slide-number {
             font-weight: 700; font-size: 1.1rem; color: var(--primary-dark); background: white;
@@ -146,73 +131,6 @@
         }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
-
-        /* Print Images Container */
-        .print-img-container {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* --- Print Specific Styles for PDF Generation --- */
-        @media print {
-            @page { size: landscape; margin: 0; }
-            body { 
-                background: white !important; 
-                overflow: visible !important;
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            }
-            #progress-container, .controls-wrapper, .bg-pattern { display: none !important; }
-            .slide-container { 
-                height: auto !important; 
-                width: 100% !important; 
-                overflow: visible !important; 
-                display: block !important; 
-            }
-            .slide {
-                position: relative !important;
-                display: flex !important;
-                opacity: 1 !important;
-                transform: none !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                page-break-after: always !important;
-                page-break-inside: avoid !important;
-                padding: 4% 6% !important;
-                overflow: hidden !important;
-            }
-            .slide:last-child { page-break-after: auto !important; }
-            .stagger-item { opacity: 1 !important; transform: none !important; }
-            
-            /* Ensure charts print properly by displaying the image snapshots instead of canvas */
-            .chart-grid { 
-                display: grid !important; 
-                height: auto !important; 
-                min-height: 60vh !important;
-                gap: 20px !important;
-            }
-            .chart-box { 
-                min-height: 250px !important; 
-                padding: 10px !important;
-            }
-            canvas { display: none !important; }
-            .print-img-container {
-                display: flex !important;
-                justify-content: center;
-                align-items: center;
-                width: 100%;
-                height: 100%;
-            }
-            .print-img-container img {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: contain;
-            }
-            
-            /* Remove shadows for cleaner print */
-            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
-        }
     </style>
 </head>
 <body>
@@ -491,19 +409,15 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 <div class="chart-grid">
                     <div class="chart-box">
                         <canvas id="chartTimeOrg"></canvas>
-                        <div class="print-img-container" id="img-chartTimeOrg"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqOrg"></canvas>
-                        <div class="print-img-container" id="img-chartFreqOrg"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartTimeFilt"></canvas>
-                        <div class="print-img-container" id="img-chartTimeFilt"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqFilt"></canvas>
-                        <div class="print-img-container" id="img-chartFreqFilt"></div>
                     </div>
                 </div>
             </div>
@@ -569,21 +483,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
     <!-- Navigation Controls -->
     <div class="controls-wrapper">
-        <div class="controls">
-            <button id="prevBtn" onclick="changeSlide(-1)" disabled>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                Previous
-            </button>
-            <button id="nextBtn" onclick="changeSlide(1)">
-                Next
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-            </button>
-            <!-- NEW PRINT PDF BUTTON -->
-            <button id="printBtn" onclick="prepareAndPrint()" class="!bg-slate-800 !text-white !border-slate-800 hover:!bg-slate-700 ml-4">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                <span>Save PDF</span>
-            </button>
-        </div>
         <div class="slide-number" id="slideNum">1 / 10</div>
     </div>
 </div>
@@ -592,8 +491,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     // --- Presentation Navigation Logic ---
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
     const slideNum = document.getElementById('slideNum');
     const progressBar = document.getElementById('progress-bar');
     let chartsInitialized = false; 
@@ -633,8 +530,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             slides[currentSlide].style.transform = 'translateY(0) scale(1)';
             slides[currentSlide].scrollTop = 0;
             
-            prevBtn.disabled = currentSlide === 0;
-            nextBtn.disabled = currentSlide === slides.length - 1;
             slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
             updateProgress();
             
@@ -653,12 +548,20 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     slides[currentSlide].style.opacity = '1';
     slides[currentSlide].style.transform = 'translateY(0) scale(1)';
     
+    // Keyboard navigation updated (Arrows + Spacebar)
     document.addEventListener('keydown', function(event) {
         // Prevent slide change when interacting with slider
         if (event.target.id === 'fc-slider') return; 
         
-        if (event.key === 'ArrowRight' && currentSlide < slides.length - 1) changeSlide(1);
-        else if (event.key === 'ArrowLeft' && currentSlide > 0) changeSlide(-1);
+        // Go forward on Right Arrow or Spacebar
+        if ((event.key === 'ArrowRight' || event.code === 'Space') && currentSlide < slides.length - 1) {
+            if (event.code === 'Space') event.preventDefault(); // Prevent scrolling down on Space
+            changeSlide(1);
+        }
+        // Go backward on Left Arrow
+        else if (event.key === 'ArrowLeft' && currentSlide > 0) {
+            changeSlide(-1);
+        }
     });
 
     // --- Interactive Logic & Chart.js ---
@@ -679,7 +582,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
         Chart.defaults.color = '#475569';
         
-        // Disabled animation completely so taking PDF snapshots is instant and robust
         const commonLineOptions = {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
@@ -773,68 +675,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             chartFreqFilt.data.datasets[0].data = y_mag;
             chartFreqFilt.update('none');
         }
-    }
-
-    // Print to PDF function - UPGRADED FOR ROBUSTNESS
-    function prepareAndPrint() {
-        const printBtn = document.getElementById('printBtn');
-        const originalText = printBtn.querySelector('span').innerText;
-        printBtn.querySelector('span').innerText = 'Preparing...';
-        printBtn.disabled = true;
-
-        const originalSlide = currentSlide;
-        const resultsSlideIndex = 7; // Index of the charts slide
-        const resultsSlide = document.getElementById('results-slide');
-        
-        // 1. Temporarily bring the results slide to the front silently
-        slides.forEach(s => { s.style.opacity = '0'; });
-        resultsSlide.style.display = 'flex';
-        resultsSlide.style.opacity = '1';
-        resultsSlide.style.zIndex = '999';
-
-        // 2. Allow DOM to apply display:flex before interacting with Canvas
-        setTimeout(() => {
-            // Initialize or force resize to get exact dimensions
-            if (!chartsInitialized) {
-                initCharts();
-                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
-                chartsInitialized = true;
-            } else {
-                chartTimeOrg.resize();
-                chartFreqOrg.resize();
-                chartTimeFilt.resize();
-                chartFreqFilt.resize();
-                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
-            }
-
-            // 3. Wait for Chart.js to finish painting on the canvas
-            setTimeout(() => {
-                // 4. Capture images from canvas elements
-                document.getElementById('img-chartTimeOrg').innerHTML = `<img src="${document.getElementById('chartTimeOrg').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartFreqOrg').innerHTML = `<img src="${document.getElementById('chartFreqOrg').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartTimeFilt').innerHTML = `<img src="${document.getElementById('chartTimeFilt').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartFreqFilt').innerHTML = `<img src="${document.getElementById('chartFreqFilt').toDataURL('image/png')}" />`;
-
-                // Restore button state
-                printBtn.querySelector('span').innerText = originalText;
-                printBtn.disabled = false;
-
-                // 5. Trigger Print (The CSS will handle showing images instead of canvas)
-                window.print();
-
-                // 6. Cleanup: Revert to original view after print dialog closes
-                setTimeout(() => {
-                    resultsSlide.style.zIndex = '';
-                    if (originalSlide !== resultsSlideIndex) {
-                        resultsSlide.style.display = 'none';
-                        resultsSlide.style.opacity = '0';
-                    }
-                    slides[originalSlide].style.display = 'flex';
-                    slides[originalSlide].style.opacity = '1';
-                }, 500);
-
-            }, 800); // 800ms gives Chart.js ample time to render
-        }, 100); // 100ms gives the DOM time to display the slide
     }
 </script>
 
