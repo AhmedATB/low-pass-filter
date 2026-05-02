@@ -186,7 +186,16 @@
             .stagger-item { opacity: 1 !important; transform: none !important; }
             
             /* Ensure charts print properly by displaying the image snapshots instead of canvas */
-            .chart-grid { display: grid !important; height: 60vh !important; }
+            .chart-grid { 
+                display: grid !important; 
+                height: auto !important; 
+                min-height: 60vh !important;
+                gap: 20px !important;
+            }
+            .chart-box { 
+                min-height: 250px !important; 
+                padding: 10px !important;
+            }
             canvas { display: none !important; }
             .print-img-container {
                 display: flex !important;
@@ -424,7 +433,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 7: NEW - Practical Filtering (Ideal vs Butterworth) -->
+    <!-- Slide 7: Practical Filtering -->
     <div class="slide">
         <div class="content">
             <h2 class="slide-title text-4xl md:text-5xl">Practical Filtering: The Butterworth Choice</h2>
@@ -572,7 +581,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             <!-- NEW PRINT PDF BUTTON -->
             <button id="printBtn" onclick="prepareAndPrint()" class="!bg-slate-800 !text-white !border-slate-800 hover:!bg-slate-700 ml-4">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Save PDF
+                <span>Save PDF</span>
             </button>
         </div>
         <div class="slide-number" id="slideNum">1 / 10</div>
@@ -670,6 +679,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
         Chart.defaults.color = '#475569';
         
+        // Disabled animation completely so taking PDF snapshots is instant and robust
         const commonLineOptions = {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
@@ -677,8 +687,8 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 x: { title: { display: true, text: 'Time (s)', font: { weight: 'bold' } }, grid: { display: false } },
                 y: { min: -1.5, max: 1.5, title: { display: true, text: 'Amplitude', font: { weight: 'bold' } } }
             },
-            elements: { point: { radius: 0 }, line: { tension: 0.1 } }, // Slight tension for smoother curves
-            animation: { duration: 0 } // Disable animation for instant slider response
+            elements: { point: { radius: 0 }, line: { tension: 0.1 } }, 
+            animation: { duration: 0 } 
         };
 
         const commonBarOptions = {
@@ -694,13 +704,13 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         chartTimeOrg = new Chart(document.getElementById('chartTimeOrg'), {
             type: 'line',
             data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Synthesized Square Wave', data: [], borderColor: '#0f172a', borderWidth: 2 }] },
-            options: { ...commonLineOptions, animation: { duration: 1000 } } // Animate only on first load
+            options: commonLineOptions 
         });
 
         chartFreqOrg = new Chart(document.getElementById('chartFreqOrg'), {
             type: 'bar',
             data: { labels: freqs, datasets: [{ label: 'Original Spectrum (FFT)', data: [], backgroundColor: '#0f172a', barThickness: 5, borderRadius: 2 }] },
-            options: { ...commonBarOptions, animation: { duration: 1000 } }
+            options: commonBarOptions 
         });
 
         chartTimeFilt = new Chart(document.getElementById('chartTimeFilt'), {
@@ -716,20 +726,16 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         });
     }
 
-    // Mathematical Engine (Simulating MATLAB Butterworth Filter exactly!)
+    // Mathematical Engine
     function updateChartsData(cutoffFreq) {
         const x_mag = [];
         const y_mag = [];
         
-        // 1. Frequency Domain Math
         freqs.forEach(f => {
             let n = f / 10;
             if (n % 2 !== 0 && n <= N_harmonics) { 
-                // It is an odd harmonic
                 let original_magnitude = 4 * A / (Math.PI * n);
                 x_mag.push(original_magnitude);
-                
-                // Calculate Butterworth Gain H(f) = 1 / sqrt(1 + (f/fc)^(2*order))
                 let gain = cutoffFreq > 0 ? 1 / Math.sqrt(1 + Math.pow(f / cutoffFreq, 2 * filter_order)) : 0;
                 y_mag.push(original_magnitude * gain);
             } else {
@@ -738,7 +744,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             }
         });
 
-        // 2. Time Domain Math (Synthesis via sum of sine waves)
         const x_fourier = t.map(time => {
             let sum = 0;
             for(let n = 1; n <= N_harmonics; n += 2) {
@@ -747,7 +752,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             return sum;
         });
 
-        // Time domain after filter (each harmonic multiplied by its Butterworth gain)
         const y_filtered = t.map(time => {
             let sum = 0;
             for(let n = 1; n <= N_harmonics; n += 2) {
@@ -758,62 +762,79 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             return sum;
         });
 
-        // 3. Update Chart Instances
         if(chartTimeOrg) {
             chartTimeOrg.data.datasets[0].data = x_fourier;
-            chartTimeOrg.update('none'); // 'none' means instant update without animation
-
+            chartTimeOrg.update('none'); 
             chartFreqOrg.data.datasets[0].data = x_mag;
             chartFreqOrg.update('none');
-
             chartTimeFilt.data.datasets[0].data = y_filtered;
             chartTimeFilt.data.datasets[0].label = `Filtered Signal (LPF, fc = ${cutoffFreq}Hz)`;
             chartTimeFilt.update('none');
-
             chartFreqFilt.data.datasets[0].data = y_mag;
             chartFreqFilt.update('none');
         }
     }
 
-    // Print to PDF function
+    // Print to PDF function - UPGRADED FOR ROBUSTNESS
     function prepareAndPrint() {
-        // Step 1: Ensure charts are initialized
-        if (!chartsInitialized) {
-            initCharts();
-            updateChartsData(20);
-            chartsInitialized = true;
-        }
+        const printBtn = document.getElementById('printBtn');
+        const originalText = printBtn.querySelector('span').innerText;
+        printBtn.querySelector('span').innerText = 'Preparing...';
+        printBtn.disabled = true;
 
-        // Step 2: Briefly show the results slide to ensure Canvas renders correctly before capturing
         const originalSlide = currentSlide;
+        const resultsSlideIndex = 7; // Index of the charts slide
         const resultsSlide = document.getElementById('results-slide');
         
-        // Hide current, show results
-        slides[currentSlide].classList.remove('active');
-        resultsSlide.classList.add('active');
+        // 1. Temporarily bring the results slide to the front silently
+        slides.forEach(s => { s.style.opacity = '0'; });
+        resultsSlide.style.display = 'flex';
         resultsSlide.style.opacity = '1';
-        resultsSlide.style.transform = 'none';
+        resultsSlide.style.zIndex = '999';
 
-        // Give Chart.js a moment to render the frame
+        // 2. Allow DOM to apply display:flex before interacting with Canvas
         setTimeout(() => {
-            // Step 3: Convert Canvas to Images for printing
-            document.getElementById('img-chartTimeOrg').innerHTML = `<img src="${document.getElementById('chartTimeOrg').toDataURL('image/png')}" />`;
-            document.getElementById('img-chartFreqOrg').innerHTML = `<img src="${document.getElementById('chartFreqOrg').toDataURL('image/png')}" />`;
-            document.getElementById('img-chartTimeFilt').innerHTML = `<img src="${document.getElementById('chartTimeFilt').toDataURL('image/png')}" />`;
-            document.getElementById('img-chartFreqFilt').innerHTML = `<img src="${document.getElementById('chartFreqFilt').toDataURL('image/png')}" />`;
+            // Initialize or force resize to get exact dimensions
+            if (!chartsInitialized) {
+                initCharts();
+                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
+                chartsInitialized = true;
+            } else {
+                chartTimeOrg.resize();
+                chartFreqOrg.resize();
+                chartTimeFilt.resize();
+                chartFreqFilt.resize();
+                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
+            }
 
-            // Step 4: Trigger Print
-            window.print();
-
-            // Step 5: Cleanup - Revert back to original slide view after print dialog closes
+            // 3. Wait for Chart.js to finish painting on the canvas
             setTimeout(() => {
-                resultsSlide.classList.remove('active');
-                slides[originalSlide].classList.add('active');
-                slides[originalSlide].style.opacity = '1';
-                slides[originalSlide].style.transform = 'translateY(0) scale(1)';
-            }, 1000);
+                // 4. Capture images from canvas elements
+                document.getElementById('img-chartTimeOrg').innerHTML = `<img src="${document.getElementById('chartTimeOrg').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartFreqOrg').innerHTML = `<img src="${document.getElementById('chartFreqOrg').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartTimeFilt').innerHTML = `<img src="${document.getElementById('chartTimeFilt').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartFreqFilt').innerHTML = `<img src="${document.getElementById('chartFreqFilt').toDataURL('image/png')}" />`;
 
-        }, 500);
+                // Restore button state
+                printBtn.querySelector('span').innerText = originalText;
+                printBtn.disabled = false;
+
+                // 5. Trigger Print (The CSS will handle showing images instead of canvas)
+                window.print();
+
+                // 6. Cleanup: Revert to original view after print dialog closes
+                setTimeout(() => {
+                    resultsSlide.style.zIndex = '';
+                    if (originalSlide !== resultsSlideIndex) {
+                        resultsSlide.style.display = 'none';
+                        resultsSlide.style.opacity = '0';
+                    }
+                    slides[originalSlide].style.display = 'flex';
+                    slides[originalSlide].style.opacity = '1';
+                }, 500);
+
+            }, 800); // 800ms gives Chart.js ample time to render
+        }, 100); // 100ms gives the DOM time to display the slide
     }
 </script>
 
