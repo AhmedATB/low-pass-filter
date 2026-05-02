@@ -131,6 +131,82 @@
         }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
+
+        /* --- Custom PDF Buttons on Last Slide --- */
+        .pdf-controls {
+            position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
+            opacity: 0.05; transition: opacity 0.3s ease; z-index: 100; pointer-events: auto;
+        }
+        .pdf-controls:hover { opacity: 1; }
+        .pdf-btn {
+            background: rgba(255, 255, 255, 0.9); border: 1px solid #cbd5e1;
+            color: #475569; font-size: 0.9rem; font-weight: bold; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 6px;
+        }
+        .pdf-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
+
+        /* --- MAGIC CSS FOR PERFECT NATIVE PDF EXPORT --- */
+        @media print {
+            @page { 
+                size: 16in 9in; /* يفرض قياس العرض التقديمي الأصلي 16:9 بدلاً من ورق A4 المربع */
+                margin: 0; 
+            }
+            body, html { 
+                width: 16in !important;
+                height: 9in !important;
+                background-color: white !important; 
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* إخفاء الأزرار وشريط التقدم أثناء الطباعة */
+            #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls { 
+                display: none !important; 
+            }
+            .slide-container { 
+                height: auto !important; 
+                width: 16in !important; 
+                overflow: visible !important; 
+                display: block !important; 
+            }
+            /* جعل جميع الشرائح مرئية للطباعة بنفس الترتيب والأبعاد */
+            .slide {
+                position: relative !important;
+                display: flex !important;
+                width: 16in !important;
+                height: 9in !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                padding: 4% 6% !important;
+                opacity: 1 !important;
+                transform: none !important;
+                overflow: hidden !important;
+                background: #f8fafc !important; /* يحافظ على خلفية السلايدات */
+            }
+            .slide:last-child { page-break-after: auto !important; }
+            .stagger-item { opacity: 1 !important; transform: none !important; }
+            
+            /* تثبيت قياسات المخططات (Charts) لتجنب انضغاطها */
+            .chart-grid { 
+                display: grid !important; 
+                height: 5.5in !important; 
+                width: 100% !important;
+                gap: 15px !important;
+            }
+            .chart-box { 
+                position: relative !important;
+                height: 100% !important; 
+                width: 100% !important;
+                padding: 10px !important; 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+            }
+            /* إزالة الظلال الثقيلة لتسريع الطباعة */
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+        }
     </style>
 </head>
 <body>
@@ -548,6 +624,14 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 <p class="text-2xl font-bold text-blue-900">Ahmed Qays & Hussein Fahem</p>
             </div>
+
+            <!-- الزر السري للطباعة -->
+            <div class="absolute bottom-4 right-4 pdf-controls z-50">
+                <button onclick="printNativePDF()" class="pdf-btn" title="Print to PDF">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print PDF
+                </button>
+            </div>
         </div>
     </div>
 
@@ -620,15 +704,12 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     
     // Keyboard navigation (Arrows + Spacebar)
     document.addEventListener('keydown', function(event) {
-        // Prevent slide change when interacting with slider
         if (event.target.id === 'fc-slider') return; 
         
-        // Go forward on Right Arrow or Spacebar
         if ((event.key === 'ArrowRight' || event.code === 'Space') && currentSlide < slides.length - 1) {
-            if (event.code === 'Space') event.preventDefault(); // Prevent scrolling down on Space
+            if (event.code === 'Space') event.preventDefault(); 
             changeSlide(1);
         }
-        // Go backward on Left Arrow
         else if (event.key === 'ArrowLeft' && currentSlide > 0) {
             changeSlide(-1);
         }
@@ -657,7 +738,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 y: { min: -1.5, max: 1.5, title: { display: true, text: 'Amplitude', font: { weight: 'bold' } } }
             },
             elements: { point: { radius: 0 }, line: { tension: 0.1 } }, 
-            animation: { duration: 1000 } 
+            animation: { duration: 0 } 
         };
 
         const commonBarOptions = {
@@ -667,7 +748,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 x: { title: { display: true, text: 'Frequency (Hz)', font: { weight: 'bold' } }, grid: { display: false } },
                 y: { min: 0, max: 1.4, title: { display: true, text: 'Magnitude', font: { weight: 'bold' } } }
             },
-            animation: { duration: 1000 }
+            animation: { duration: 0 }
         };
 
         chartTimeOrg = new Chart(document.getElementById('chartTimeOrg'), {
@@ -741,6 +822,28 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             chartFreqFilt.data.datasets[0].data = y_mag;
             chartFreqFilt.update('none');
         }
+    }
+
+    // --- Fast Native Print Function ---
+    function printNativePDF() {
+        if (!chartsInitialized) {
+            initCharts();
+            updateChartsData(20);
+            chartsInitialized = true;
+        }
+
+        // إجبار المخططات على إعادة قياس نفسها لتناسب حجم الطباعة الجديد
+        if (chartTimeOrg) {
+            chartTimeOrg.resize();
+            chartFreqOrg.resize();
+            chartTimeFilt.resize();
+            chartFreqFilt.resize();
+        }
+
+        // نعطي المتصفح نصف ثانية لتجهيز الرسومات والمعادلات ثم نظهر نافذة الطباعة
+        setTimeout(() => {
+            window.print();
+        }, 500);
     }
 </script>
 
