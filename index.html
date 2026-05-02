@@ -132,7 +132,7 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
 
-        /* --- PDF Buttons --- */
+        /* --- Custom PDF Buttons on Last Slide --- */
         .pdf-controls {
             position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
             opacity: 0.05; transition: opacity 0.3s ease; z-index: 100; pointer-events: auto;
@@ -152,18 +152,21 @@
             z-index: 9999; justify-content: center; align-items: center; flex-direction: column;
         }
 
-        /* --- MAGIC CSS FOR PERFECT NATIVE PDF EXPORT --- */
+        .print-chart-img { display: none; }
+
+        /* ==================================================================== */
+        /* --- MAGIC CSS FOR PERFECT NATIVE PDF EXPORT (NO DISTORTION EVER) --- */
+        /* ==================================================================== */
         @media print {
             @page { 
-                size: 16in 9in; /* يفرض قياس العرض التقديمي الأصلي 16:9 */
-                margin: 0; 
+                size: 297mm 167mm; /* قياس ثابت يفرض نسبة 16:9 دائمًا لمنع تغير الحجم أو طيران الصفحات */
+                margin: 0 !important; 
             }
             body, html { 
                 display: block !important;
-                width: 16in !important;
+                width: 297mm !important;
                 height: auto !important;
                 background-color: white !important; 
-                overflow: visible !important;
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
                 margin: 0 !important;
@@ -175,18 +178,18 @@
             }
             .slide-container { 
                 display: block !important; 
-                position: static !important; /* هذا يلغي تداخل الصفحات (طيرانها) */
-                width: 16in !important; 
+                position: static !important; 
+                width: 100% !important; 
                 height: auto !important; 
                 overflow: visible !important; 
             }
-            /* جعل جميع الشرائح مرئية ومكدسة عمودياً بدلاً من وضعها فوق بعضها */
+            /* إجبار كل شريحة لتكون بحجم صفحة العرض تمامًا (كأنها صورة صلبة) */
             .slide {
                 position: relative !important; 
                 display: flex !important;
                 flex-direction: column !important;
-                width: 16in !important;
-                height: 9in !important;
+                width: 297mm !important;
+                height: 167mm !important;
                 page-break-after: always !important;
                 page-break-inside: avoid !important;
                 padding: 4% 6% !important;
@@ -205,9 +208,10 @@
             /* تثبيت قياسات المخططات (Charts) */
             .chart-grid { 
                 display: grid !important; 
-                height: 5.5in !important; 
+                height: 100% !important; 
                 width: 100% !important;
                 gap: 15px !important;
+                flex-grow: 1 !important;
             }
             .chart-box { 
                 position: relative !important;
@@ -217,26 +221,27 @@
                 box-shadow: none !important; 
                 border: 1px solid #e2e8f0 !important; 
                 background: white !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                min-height: 200px !important;
             }
-            /* إخفاء الـ Canvas وعرض الصورة الملتقطة بدلاً منه */
+            /* إخفاء الـ Canvas وعرض الصورة الملتقطة بدلاً منه لتجنب المربعات البيضاء */
             canvas { display: none !important; }
             .print-chart-img {
                 display: block !important;
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
             }
             
-            /* إزالة الظلال الزجاجية الثقيلة لتسريع الطباعة */
+            /* إزالة الظلال الزجاجية الثقيلة لتسريع الطباعة، ولكن مع الحفاظ على الألوان لمنع اختفاء المعادلات */
             .glass-card { 
                 box-shadow: none !important; 
-                border: 1px solid #e2e8f0 !important; 
-                background: white !important;
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
             }
         }
-        .print-chart-img { display: none; }
     </style>
 </head>
 <body>
@@ -682,12 +687,6 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     </div>
 </div>
 
-<!-- شاشة التحميل للطباعة -->
-<div id="print-overlay">
-    <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
-    <h2 class="text-3xl font-bold text-slate-800">تجهيز الملف للطباعة...</h2>
-</div>
-
 <script>
     // --- Presentation Navigation Logic ---
     let currentSlide = 0;
@@ -871,7 +870,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         }
     }
 
-    // --- Fast Native Print Function (FIXED FOR EXACT 16:9 RENDERING) ---
+    // --- Fast Native Print Function (FIXED FOR EXACT 16:9 RENDERING & CHARTS) ---
     function printNativePDF() {
         const overlay = document.getElementById('print-overlay');
         overlay.style.display = 'flex';
@@ -879,34 +878,36 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         const originalSlide = currentSlide;
         const resultsSlideIndex = 9; // Slide 10
 
-        if (!chartsInitialized) {
-            initCharts();
-            updateChartsData(20);
-            chartsInitialized = true;
-        }
+        // 1. تفعيل الشريحة الخاصة بالرسومات في الخلفية
+        const resultsSlide = slides[resultsSlideIndex];
+        slides.forEach(s => { s.style.display = 'none'; s.style.opacity = '0'; s.classList.remove('active'); });
+        
+        resultsSlide.style.display = 'flex';
+        resultsSlide.style.opacity = '1';
+        resultsSlide.classList.add('active');
+        resultsSlide.style.zIndex = '-1';
 
-        // نجبر السلايد الخاص بالرسومات على الظهور مؤقتاً لكي يأخذ أبعاده الحقيقية
-        slides.forEach(s => { s.style.opacity = '0'; s.classList.remove('active'); s.style.display = 'none'; });
-        slides[resultsSlideIndex].style.display = 'flex';
-        slides[resultsSlideIndex].style.opacity = '1';
-        slides[resultsSlideIndex].classList.add('active');
-
-        // نعطي المتصفح 50 جزء من الثانية ليطبق الـ CSS
         setTimeout(() => {
-            if(chartTimeOrg) {
-                chartTimeOrg.resize(); chartFreqOrg.resize();
-                chartTimeFilt.resize(); chartFreqFilt.resize();
+            if (!chartsInitialized) {
+                initCharts();
+                chartsInitialized = true;
             }
+            
+            // 2. تحديث الرسومات لتأخذ القياسات الصحيحة
+            chartTimeOrg.resize(); chartFreqOrg.resize();
+            chartTimeFilt.resize(); chartFreqFilt.resize();
+            updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
 
-            // نعطي الرسم البياني وقتاً للرسم
+            // 3. إعطاء الـ Canvas وقت ليرسم نفسه قبل التقاط الصورة
             setTimeout(() => {
-                // تحويل الـ Canvas إلى صور فورية (هذا يمنع ظهورها بيضاء في الطباعة)
-                document.getElementById('img-chartTimeOrg').src = document.getElementById('chartTimeOrg').toDataURL('image/png', 1.0);
-                document.getElementById('img-chartFreqOrg').src = document.getElementById('chartFreqOrg').toDataURL('image/png', 1.0);
-                document.getElementById('img-chartTimeFilt').src = document.getElementById('chartTimeFilt').toDataURL('image/png', 1.0);
-                document.getElementById('img-chartFreqFilt').src = document.getElementById('chartFreqFilt').toDataURL('image/png', 1.0);
+                // تحويل المخططات لصور ثابتة
+                document.getElementById('img-chartTimeOrg').src = chartTimeOrg.canvas.toDataURL('image/png', 1.0);
+                document.getElementById('img-chartFreqOrg').src = chartFreqOrg.canvas.toDataURL('image/png', 1.0);
+                document.getElementById('img-chartTimeFilt').src = chartTimeFilt.canvas.toDataURL('image/png', 1.0);
+                document.getElementById('img-chartFreqFilt').src = chartFreqFilt.canvas.toDataURL('image/png', 1.0);
 
-                // إرجاع الشاشة للسلايد الذي كنت تقف عليه
+                // 4. استرجاع الشريحة الأصلية
+                resultsSlide.style.zIndex = '';
                 slides.forEach((s, i) => {
                     if (i === originalSlide) {
                         s.style.display = 'flex';
@@ -921,11 +922,13 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
                 overlay.style.display = 'none';
 
-                // تشغيل الطباعة
-                setTimeout(() => { window.print(); }, 100);
+                // 5. الطباعة
+                setTimeout(() => {
+                    window.print();
+                }, 100);
 
-            }, 300);
-        }, 50);
+            }, 500); 
+        }, 100); 
     }
 </script>
 
