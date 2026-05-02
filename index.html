@@ -138,8 +138,8 @@
             grid-template-rows: 1fr 1fr;
             gap: 1.5rem;
             width: 100%;
-            height: 60vh;
-            min-height: 500px;
+            height: 55vh;
+            min-height: 400px;
         }
         .chart-box {
             background: white;
@@ -149,6 +149,32 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             position: relative;
         }
+        
+        /* Custom range slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+            border: 3px solid white;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        input[type=range]:focus { outline: none; }
     </style>
 </head>
 <body>
@@ -238,7 +264,7 @@
             <div class="glass-card p-8 md:p-14 w-full text-center mb-10 shadow-lg relative overflow-hidden group">
                 <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50 group-hover:opacity-100 transition-opacity"></div>
                 <p class="relative z-10 text-slate-900" style="font-size: 2.2rem; min-width: 300px;">
-                    $$ f(t) = \frac{4A}{\pi} \sum_{n=1,3,5,...}^{N} \frac{1}{n} \sin(n \omega_0 t) $$
+                    $$f(t) = \frac{4A}{\pi} \sum_{n=1,3,5,...}^{N} \frac{1}{n} \sin(n \omega_0 t)$$
                 </p>
             </div>
 
@@ -325,28 +351,29 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
-    <!-- Slide 6: Results (LIVE PLOTS) -->
+    <!-- Slide 6: Results (LIVE PLOTS WITH SLIDER) -->
     <div class="slide">
         <div class="content flex flex-col h-full">
-            <h2 class="slide-title text-4xl md:text-5xl mb-4">Results: Live Interactive Output</h2>
+            <h2 class="slide-title text-4xl md:text-5xl mb-2">Results: Live Interactive Filter</h2>
+            
+            <!-- Interactive Slider Control -->
+            <div class="mb-4 bg-white/90 p-4 rounded-xl border-2 border-blue-200 shadow-md flex items-center gap-6 z-20 relative">
+                <div class="flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    <label for="fc-slider" class="font-extrabold text-slate-800 whitespace-nowrap text-xl">Adjust Cutoff Frequency (f<sub>c</sub>):</label>
+                </div>
+                <input type="range" id="fc-slider" min="0" max="150" step="5" value="20" class="flex-grow">
+                <div class="bg-blue-600 text-white rounded-lg px-4 py-2 min-w-[100px] text-center shadow-inner">
+                    <span id="fc-value" class="font-black text-2xl">20</span> <span class="font-semibold text-blue-200">Hz</span>
+                </div>
+            </div>
+
             <div class="glass-card p-4 flex-grow">
                 <div class="chart-grid">
-                    <!-- Chart 1: Time Domain (Original) -->
-                    <div class="chart-box">
-                        <canvas id="chartTimeOrg"></canvas>
-                    </div>
-                    <!-- Chart 2: Freq Domain (Original) -->
-                    <div class="chart-box">
-                        <canvas id="chartFreqOrg"></canvas>
-                    </div>
-                    <!-- Chart 3: Time Domain (Filtered) -->
-                    <div class="chart-box">
-                        <canvas id="chartTimeFilt"></canvas>
-                    </div>
-                    <!-- Chart 4: Freq Domain (Filtered) -->
-                    <div class="chart-box">
-                        <canvas id="chartFreqFilt"></canvas>
-                    </div>
+                    <div class="chart-box"><canvas id="chartTimeOrg"></canvas></div>
+                    <div class="chart-box"><canvas id="chartFreqOrg"></canvas></div>
+                    <div class="chart-box"><canvas id="chartTimeFilt"></canvas></div>
+                    <div class="chart-box"><canvas id="chartFreqFilt"></canvas></div>
                 </div>
             </div>
         </div>
@@ -384,6 +411,31 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         </div>
     </div>
 
+    <!-- Slide 8: Q&A / Thank You -->
+    <div class="slide">
+        <div class="content flex flex-col justify-center items-center h-full text-center mt-12 md:mt-20">
+            <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-8 shadow-inner animate-bounce" style="animation-duration: 3s;">
+                <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl font-extrabold text-slate-900 mb-6 uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                Thank You!
+            </h1>
+            
+            <div class="w-32 h-1.5 bg-blue-500 mb-8 mx-auto rounded-full"></div>
+            
+            <p class="text-2xl text-slate-700 mb-12 max-w-3xl leading-relaxed">
+                We appreciate your time and attention.<br> 
+                <span class="font-semibold">We are now open to any questions</span> 
+            </p>
+            
+            <div class="glass-card px-10 py-5 inline-flex items-center gap-4 shadow-lg border-blue-200">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <p class="text-2xl font-bold text-blue-900">Ahmed Qays & Hussein Fahem</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation Controls -->
     <div class="controls-wrapper">
         <div class="controls">
@@ -396,7 +448,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
             </button>
         </div>
-        <div class="slide-number" id="slideNum">1 / 7</div>
+        <div class="slide-number" id="slideNum">1 / 8</div>
     </div>
 </div>
 
@@ -408,7 +460,21 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     const nextBtn = document.getElementById('nextBtn');
     const slideNum = document.getElementById('slideNum');
     const progressBar = document.getElementById('progress-bar');
-    let chartsRendered = false; // Flag to render charts only once
+    let chartsInitialized = false; 
+
+    // Global chart instances
+    let chartTimeOrg, chartFreqOrg, chartTimeFilt, chartFreqFilt;
+
+    // Signal parameters
+    const fs = 1000;
+    const numPoints = 500; // 0.5 seconds at 1000Hz
+    const t = Array.from({length: numPoints}, (_, i) => i / fs);
+    const f0 = 10;
+    const w0 = 2 * Math.PI * f0;
+    const A = 1;
+    const N_harmonics = 15;
+    const filter_order = 4; // 4th order Butterworth
+    const freqs = Array.from({length: 16}, (_, i) => i * 10); // 0 to 150 Hz
 
     function updateProgress() {
         const progress = (currentSlide / (slides.length - 1)) * 100;
@@ -432,16 +498,20 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             slides[currentSlide].scrollTop = 0;
             
             prevBtn.disabled = currentSlide === 0;
+            
+            // If we are on the very last slide, maybe change the "Next" button text or disable it.
             nextBtn.disabled = currentSlide === slides.length - 1;
+            
             slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
             updateProgress();
             
             if (window.MathJax) MathJax.typesetPromise();
             
-            // Render charts if we reach slide 6 (index 5)
-            if (currentSlide === 5 && !chartsRendered) {
-                renderLiveCharts();
-                chartsRendered = true;
+            // Initialize charts if we reach slide 6 (index 5)
+            if (currentSlide === 5 && !chartsInitialized) {
+                initCharts();
+                updateChartsData(20); // Default to 20Hz
+                chartsInitialized = true;
             }
         }, 300);
     }
@@ -451,44 +521,28 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     slides[currentSlide].style.transform = 'translateY(0) scale(1)';
     
     document.addEventListener('keydown', function(event) {
+        // Prevent slide change when interacting with slider
+        if (event.target.id === 'fc-slider') return; 
+        
         if (event.key === 'ArrowRight' && currentSlide < slides.length - 1) changeSlide(1);
         else if (event.key === 'ArrowLeft' && currentSlide > 0) changeSlide(-1);
     });
 
-    // --- Live Data Generation & Chart Rendering Logic ---
-    function renderLiveCharts() {
-        // 1. Math Generation (Simulating MATLAB)
-        const fs = 1000;
-        const numPoints = 500; // 0.5 seconds at 1000Hz
-        const t = Array.from({length: numPoints}, (_, i) => i / fs);
-        const f0 = 10;
-        const w0 = 2 * Math.PI * f0;
-        const A = 1;
-        const N_harmonics = 15;
+    // --- Interactive Logic & Chart.js ---
+    
+    // Listen to slider changes
+    const fcSlider = document.getElementById('fc-slider');
+    const fcValueDisplay = document.getElementById('fc-value');
+    
+    fcSlider.addEventListener('input', function(e) {
+        const cutoff = parseFloat(e.target.value);
+        fcValueDisplay.innerText = cutoff;
+        if (chartsInitialized) {
+            updateChartsData(cutoff);
+        }
+    });
 
-        // Generate Time Domain Original Signal
-        const x_fourier = t.map(time => {
-            let sum = 0;
-            for(let n = 1; n <= N_harmonics; n += 2) {
-                sum += (1/n) * Math.sin(n * w0 * time);
-            }
-            return (4 * A / Math.PI) * sum;
-        });
-
-        // Generate Time Domain Filtered Signal (Assuming ideal LPF at 20Hz -> only 10Hz fundamental remains)
-        const y_filtered = t.map(time => (4 * A / Math.PI) * Math.sin(w0 * time));
-
-        // Generate Frequency Domain Data
-        const freqs = Array.from({length: 16}, (_, i) => i * 10); // 0 to 150 Hz
-        const x_mag = freqs.map(f => {
-            if (f % 20 === 10 && f <= N_harmonics * 10) return (4 * A / (Math.PI * (f / 10)));
-            return 0;
-        });
-        
-        // Filtered spectrum (Only 10Hz passes)
-        const y_mag = freqs.map(f => f === 10 ? (4 * A / Math.PI) : 0);
-
-        // Chart.js Default Configs
+    function initCharts() {
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
         Chart.defaults.color = '#475569';
         
@@ -499,8 +553,8 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 x: { title: { display: true, text: 'Time (s)', font: { weight: 'bold' } }, grid: { display: false } },
                 y: { min: -1.5, max: 1.5, title: { display: true, text: 'Amplitude', font: { weight: 'bold' } } }
             },
-            elements: { point: { radius: 0 } },
-            animation: { duration: 1500, easing: 'easeOutQuart' }
+            elements: { point: { radius: 0 }, line: { tension: 0.1 } }, // Slight tension for smoother curves
+            animation: { duration: 0 } // Disable animation for instant slider response
         };
 
         const commonBarOptions = {
@@ -510,38 +564,92 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 x: { title: { display: true, text: 'Frequency (Hz)', font: { weight: 'bold' } }, grid: { display: false } },
                 y: { min: 0, max: 1.4, title: { display: true, text: 'Magnitude', font: { weight: 'bold' } } }
             },
-            animation: { duration: 1500, easing: 'easeOutQuart', delay: 500 }
+            animation: { duration: 0 }
         };
 
-        // Render Chart 1: Time Original
-        new Chart(document.getElementById('chartTimeOrg'), {
+        chartTimeOrg = new Chart(document.getElementById('chartTimeOrg'), {
             type: 'line',
-            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Synthesized Square Wave', data: x_fourier, borderColor: '#0f172a', borderWidth: 2 }] },
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Synthesized Square Wave', data: [], borderColor: '#0f172a', borderWidth: 2 }] },
+            options: { ...commonLineOptions, animation: { duration: 1000 } } // Animate only on first load
+        });
+
+        chartFreqOrg = new Chart(document.getElementById('chartFreqOrg'), {
+            type: 'bar',
+            data: { labels: freqs, datasets: [{ label: 'Original Spectrum (FFT)', data: [], backgroundColor: '#0f172a', barThickness: 5, borderRadius: 2 }] },
+            options: { ...commonBarOptions, animation: { duration: 1000 } }
+        });
+
+        chartTimeFilt = new Chart(document.getElementById('chartTimeFilt'), {
+            type: 'line',
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Filtered Signal', data: [], borderColor: '#ef4444', borderWidth: 2 }] },
             options: commonLineOptions
         });
 
-        // Render Chart 2: Freq Original
-        new Chart(document.getElementById('chartFreqOrg'), {
+        chartFreqFilt = new Chart(document.getElementById('chartFreqFilt'), {
             type: 'bar',
-            data: { labels: freqs, datasets: [{ label: 'Original Spectrum (FFT)', data: x_mag, backgroundColor: '#0f172a', barThickness: 4, borderRadius: 2 }] },
+            data: { labels: freqs, datasets: [{ label: 'Filtered Spectrum', data: [], backgroundColor: '#ef4444', barThickness: 5, borderRadius: 2 }] },
             options: commonBarOptions
         });
+    }
 
-        // Render Chart 3: Time Filtered
-        new Chart(document.getElementById('chartTimeFilt'), {
-            type: 'line',
-            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Filtered Signal (LPF, fc = 20Hz)', data: y_filtered, borderColor: '#ef4444', borderWidth: 2 }] },
-            options: commonLineOptions
+    // Mathematical Engine (Simulating MATLAB Butterworth Filter exactly!)
+    function updateChartsData(cutoffFreq) {
+        const x_mag = [];
+        const y_mag = [];
+        
+        // 1. Frequency Domain Math
+        freqs.forEach(f => {
+            let n = f / 10;
+            if (n % 2 !== 0 && n <= N_harmonics) { 
+                // It is an odd harmonic
+                let original_magnitude = 4 * A / (Math.PI * n);
+                x_mag.push(original_magnitude);
+                
+                // Calculate Butterworth Gain H(f) = 1 / sqrt(1 + (f/fc)^(2*order))
+                let gain = cutoffFreq > 0 ? 1 / Math.sqrt(1 + Math.pow(f / cutoffFreq, 2 * filter_order)) : 0;
+                y_mag.push(original_magnitude * gain);
+            } else {
+                x_mag.push(0);
+                y_mag.push(0);
+            }
         });
 
-        // Render Chart 4: Freq Filtered
-        new Chart(document.getElementById('chartFreqFilt'), {
-            type: 'bar',
-            data: { labels: freqs, datasets: [{ label: 'Filtered Spectrum', data: y_mag, backgroundColor: '#ef4444', barThickness: 4, borderRadius: 2 }] },
-            options: commonBarOptions
+        // 2. Time Domain Math (Synthesis via sum of sine waves)
+        const x_fourier = t.map(time => {
+            let sum = 0;
+            for(let n = 1; n <= N_harmonics; n += 2) {
+                sum += (4 * A / (Math.PI * n)) * Math.sin(n * w0 * time);
+            }
+            return sum;
         });
+
+        // Time domain after filter (each harmonic multiplied by its Butterworth gain)
+        const y_filtered = t.map(time => {
+            let sum = 0;
+            for(let n = 1; n <= N_harmonics; n += 2) {
+                let f = n * 10;
+                let gain = cutoffFreq > 0 ? 1 / Math.sqrt(1 + Math.pow(f / cutoffFreq, 2 * filter_order)) : 0;
+                sum += (4 * A / (Math.PI * n)) * gain * Math.sin(n * w0 * time);
+            }
+            return sum;
+        });
+
+        // 3. Update Chart Instances
+        chartTimeOrg.data.datasets[0].data = x_fourier;
+        chartTimeOrg.update('none'); // 'none' means instant update without animation
+
+        chartFreqOrg.data.datasets[0].data = x_mag;
+        chartFreqOrg.update('none');
+
+        chartTimeFilt.data.datasets[0].data = y_filtered;
+        chartTimeFilt.data.datasets[0].label = `Filtered Signal (LPF, fc = ${cutoffFreq}Hz)`;
+        chartTimeFilt.update('none');
+
+        chartFreqFilt.data.datasets[0].data = y_mag;
+        chartFreqFilt.update('none');
     }
 </script>
 
 </body>
 </html>
+```
