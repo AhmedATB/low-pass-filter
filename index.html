@@ -8,7 +8,907 @@
     
     <!-- Configure MathJax BEFORE loading it -->
     <script>
+        window.MathJax = {<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier Series & LPF Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configure MathJax BEFORE loading it -->
+    <script>
         window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <!-- MathJax for rendering mathematical equations -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- Chart.js for Live Interactive Plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Modern Premium Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1e40af; --accent: #3b82f6;
+            --bg-color: #f8fafc; --text-main: #0f172a; --text-muted: #475569;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 0; overflow: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(217,100%,94%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(217,100%,92%,1) 0, transparent 50%);
+        }
+
+        /* Progress Bar */
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: #e2e8f0; z-index: 100; }
+        #progress-bar { height: 100%; background: linear-gradient(90deg, #3b82f6, #1d4ed8); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .slide-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 5% 8%; box-sizing: border-box; display: none;
+            opacity: 0; transform: translateY(20px) scale(0.98);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+
+        .slide.active { display: flex; flex-direction: column; opacity: 1; transform: translateY(0) scale(1); z-index: 10; }
+
+        /* Custom Modern Scrollbar */
+        .slide::-webkit-scrollbar { width: 6px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+        .slide::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .slide::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .content { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; height: auto; z-index: 2; }
+        
+        .slide-title {
+            color: var(--primary-dark); font-weight: 800; margin-bottom: 2rem;
+            letter-spacing: -0.02em; position: relative; display: inline-block;
+        }
+        
+        .slide-title::after {
+            content: ''; position: absolute; bottom: -8px; left: 0; width: 60%;
+            height: 5px; background: linear-gradient(90deg, var(--primary), transparent); border-radius: 5px;
+        }
+
+        /* Premium IDE-like Code Block */
+        .code-block {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #0f172a; color: #e2e8f0; padding: 1.5rem 2rem;
+            border-radius: 12px; white-space: pre-wrap; overflow-x: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border: 1px solid #1e293b; font-size: 1rem; line-height: 1.6; position: relative;
+        }
+        
+        .code-block::before {
+            content: ''; display: block; width: 12px; height: 12px; border-radius: 50%;
+            background: #ef4444; box-shadow: 20px 0 0 #f59e0b, 40px 0 0 #10b981; margin-bottom: 1rem;
+        }
+
+        @media (min-width: 768px) { .code-block { font-size: 1.1rem; } }
+        
+        .code-keyword { color: #c678dd; } .code-function { color: #61afef; }
+        .code-number { color: #d19a66; } .code-string { color: #98c379; }
+        .code-comment { color: #64748b; font-style: italic; }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); border-radius: 16px;
+        }
+        
+        .controls-wrapper {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 90px;
+            background: linear-gradient(to top, rgba(248, 250, 252, 1) 40%, rgba(248, 250, 252, 0));
+            display: flex; justify-content: flex-end; align-items: center; z-index: 50; padding: 0 5%; pointer-events: none;
+        }
+        
+        .slide-number {
+            font-weight: 700; font-size: 1.1rem; color: var(--primary-dark); background: white;
+            padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); pointer-events: auto;
+        }
+
+        .stagger-item { opacity: 0; transform: translateX(-20px); transition: all 0.5s ease forwards; }
+        .slide.active .stagger-item:nth-child(1) { transition-delay: 0.2s; opacity: 1; transform: translateX(0); }
+        .slide.active .stagger-item:nth-child(2) { transition-delay: 0.4s; opacity: 1; transform: translateX(0); }
+        .slide.active .stagger-item:nth-child(3) { transition-delay: 0.6s; opacity: 1; transform: translateX(0); }
+        
+        /* Chart container styling */
+        .chart-grid {
+            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+            gap: 1.5rem; width: 100%; height: 55vh; min-height: 400px;
+        }
+        .chart-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
+        
+        /* Custom range slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: #2563eb; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(37,99,235,0.4); border: 3px solid white;
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
+        input[type=range]:focus { outline: none; }
+
+        /* Print Images Container */
+        .print-img-container { display: none; width: 100%; height: 100%; }
+
+        /* --- Custom PDF Buttons on Last Slide --- */
+        .pdf-controls {
+            opacity: 0.1;
+            transition: opacity 0.3s ease;
+        }
+        .pdf-controls:hover {
+            opacity: 1;
+        }
+        .pdf-btn {
+            background: rgba(255, 255, 255, 0.8); border: 1px solid #cbd5e1;
+            color: #475569; font-size: 0.8rem; font-weight: 600; padding: 4px 8px;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s;
+        }
+        .pdf-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
+
+        /* --- Print Specific Styles for A4 PDF Generation --- */
+        @media print {
+            body { 
+                background: white !important; 
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls { display: none !important; }
+            .slide-container { 
+                height: auto !important; width: 100% !important; overflow: visible !important; display: block !important; 
+            }
+            
+            /* Print charts correctly */
+            .chart-grid { display: grid !important; height: auto !important; min-height: auto !important; gap: 15px !important;}
+            .chart-box { padding: 5px !important; box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            canvas { display: none !important; }
+            .print-img-container {
+                display: flex !important; justify-content: center; align-items: center; width: 100%; height: 100%;
+            }
+            .print-img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            .stagger-item { opacity: 1 !important; transform: none !important; }
+
+            /* ========================================= */
+            /* MODE 1: Single Slide per Page (Landscape) */
+            /* ========================================= */
+            body.print-single .slide {
+                position: relative !important;
+                display: flex !important;
+                width: 297mm !important;
+                height: 167mm !important; /* Force 16:9 Aspect Ratio */
+                margin: 0 auto !important; /* Center on the 210mm A4 height */
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                padding: 4% 6% !important;
+                opacity: 1 !important;
+                transform: none !important;
+                overflow: hidden !important;
+            }
+            body.print-single .slide:last-child { page-break-after: auto !important; }
+
+            /* ========================================= */
+            /* MODE 2: Two Slides per Page (Portrait)    */
+            /* ========================================= */
+            body.print-double .slide {
+                position: relative !important;
+                display: flex !important;
+                width: 190mm !important; /* Width fitting A4 Portrait minus 20mm margins */
+                height: 107mm !important; /* Forced 16:9 Aspect Ratio */
+                margin: 0 auto 15mm auto !important; /* Space between slides */
+                page-break-inside: avoid !important;
+                page-break-after: auto !important;
+                padding: 4% 6% !important;
+                opacity: 1 !important;
+                transform: none !important;
+                border: 2px solid #cbd5e1 !important;
+                border-radius: 12px !important;
+                box-sizing: border-box !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="progress-container"><div id="progress-bar"></div></div>
+
+<div class="slide-container" id="presentation">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active flex-col justify-center items-center text-center">
+        <div class="content mt-12 md:mt-20">
+            <div class="inline-block mb-6 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-bold text-sm tracking-widest uppercase shadow-sm">
+                Final Project Presentation
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 mb-6 uppercase leading-tight tracking-tight">
+                Fourier Series Synthesis <br> 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                    & Low-Pass Filtering
+                </span> <br> 
+                of a Periodic Signal
+            </h1>
+            
+            <div class="glass-card mt-12 p-8 inline-block text-left mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+                    <div>
+                        <p class="text-sm text-slate-500 uppercase tracking-wider font-bold mb-1">Prepared by</p>
+                        <p class="text-xl md:text-2xl text-slate-800 font-semibold">Ahmed Qays</p>
+                        <p class="text-xl md:text-2xl text-slate-800 font-semibold">Hussein Fahem</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-500 uppercase tracking-wider font-bold mb-1">Supervised by</p>
+                        <p class="text-xl md:text-2xl text-slate-800 font-semibold">Dr. Alaa Imran</p>
+                        <div class="mt-4 inline-flex items-center gap-2 bg-blue-50 px-3 py-1 rounded border border-blue-100">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span class="font-bold text-blue-800">Tool: MATLAB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Objectives -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Project Objectives</h2>
+            <div class="flex flex-col gap-6 md:gap-8 mt-6 md:mt-10">
+                <div class="stagger-item glass-card p-6 md:p-8 flex items-start gap-6 border-l-4 border-l-blue-500">
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Synthesize</h3>
+                        <p class="text-lg md:text-xl text-slate-600 leading-relaxed">Build a square wave signal mathematically using Fourier Series by summing odd harmonics (1st, 3rd, 5th, ... up to 15th) to approximate the periodic waveform.</p>
+                    </div>
+                </div>
+                
+                <div class="stagger-item glass-card p-6 md:p-8 flex items-start gap-6 border-l-4 border-l-indigo-500">
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Analyze</h3>
+                        <p class="text-lg md:text-xl text-slate-600 leading-relaxed">Examine the frequency spectrum of the synthesized signal using Fast Fourier Transform (FFT) to identify and visualize the harmonic components.</p>
+                    </div>
+                </div>
+
+                <div class="stagger-item glass-card p-6 md:p-8 flex items-start gap-6 border-l-4 border-l-purple-500">
+                    <div class="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Filter</h3>
+                        <p class="text-lg md:text-xl text-slate-600 leading-relaxed">Process the signal by applying a Butterworth Low-Pass Filter to remove high-frequency harmonics and observe the transformation back into a smooth sine wave.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Mathematical Derivation -->
+    <div class="slide">
+        <div class="content flex flex-col items-center">
+            <h2 class="slide-title text-4xl md:text-5xl self-start">Mathematical Derivation</h2>
+            <p class="text-xl md:text-2xl text-slate-600 mb-6 self-start font-medium">Solving for the Fourier Coefficients of a Square Wave:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-8">
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                    <h3 class="font-extrabold text-xl text-slate-800 mb-3 border-b-2 border-slate-200 pb-2 w-full">1. General Series</h3>
+                    <p class="text-sm text-slate-600 mb-3">Any periodic signal is expressed as:</p>
+                    <p class="text-lg font-bold text-blue-800">$$f(t) = a_0 + \sum_{n=1}^{\infty} (a_n \cos + b_n \sin)$$</p>
+                </div>
+                
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-center items-center text-center border-t-4 border-indigo-500">
+                    <h3 class="font-extrabold text-xl text-indigo-800 mb-3 border-b-2 border-indigo-100 pb-2 w-full">2. Symmetry Rules</h3>
+                    <p class="text-sm text-slate-600 mb-2">Our square wave has <strong>Odd Symmetry</strong> and zero average (no DC offset):</p>
+                    <div class="flex gap-4">
+                        <p class="text-xl font-bold text-red-500">$$a_0 = 0$$</p>
+                        <p class="text-xl font-bold text-red-500">$$a_n = 0$$</p>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-center items-center text-center border-t-4 border-blue-500">
+                    <h3 class="font-extrabold text-xl text-blue-800 mb-3 border-b-2 border-blue-100 pb-2 w-full">3. Solving for \(b_n\)</h3>
+                    <p class="text-sm text-slate-600 mb-2">We integrate over one period \(T\):</p>
+                    <p class="text-lg font-bold text-slate-800">$$b_n = \frac{2}{T} \int_{0}^{T} f(t) \sin(n \omega_0 t) dt$$</p>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 w-full text-center bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-md">
+                <h3 class="font-extrabold text-2xl text-slate-800 mb-3">Final Coefficient Result</h3>
+                <p class="text-lg text-slate-700 mb-4">After performing the integration, the terms drop to zero for even \(n\), leaving only the odd harmonics:</p>
+                <div class="bg-white inline-block px-8 py-4 rounded-xl shadow-sm border border-blue-100">
+                    <p class="text-3xl font-extrabold text-blue-700">$$b_n = \frac{4A}{n\pi} \quad \text{for odd } n = 1, 3, 5, ...$$</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Equation Assembly -->
+    <div class="slide">
+        <div class="content flex flex-col items-center">
+            <h2 class="slide-title text-4xl md:text-5xl self-start">Assembled Equation</h2>
+            <p class="text-xl md:text-2xl text-slate-600 mb-8 self-start font-medium">Substituting \(b_n\) back into the series gives us the final formula:</p>
+            
+            <div class="glass-card p-8 md:p-14 w-full text-center mb-10 shadow-lg relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50"></div>
+                <p class="relative z-10 text-slate-900" style="font-size: 2.2rem; min-width: 300px;">
+                    $$f(t) = \frac{4A}{\pi} \sum_{n=1,3,5,...}^{N} \frac{1}{n} \sin(n \omega_0 t)$$
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 w-full">
+                <div class="glass-card p-8 rounded-2xl">
+                    <h3 class="font-extrabold text-2xl text-blue-700 mb-6 flex items-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        Parameters
+                    </h3>
+                    <ul class="space-y-4 text-xl text-slate-700">
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-blue-500"></span> <strong>A:</strong> Signal Amplitude</li>
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-blue-500"></span> <strong>N = 15:</strong> Number of harmonics used</li>
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-blue-500"></span> <strong>n:</strong> Odd integers only (1, 3, 5...)</li>
+                    </ul>
+                </div>
+                <div class="glass-card p-8 rounded-2xl">
+                    <h3 class="font-extrabold text-2xl text-indigo-700 mb-6 flex items-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Key Variables
+                    </h3>
+                    <ul class="space-y-4 text-xl text-slate-700">
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>\(\omega_0 = 2\pi f_0\) :</strong> Angular frequency (rad/s)</li>
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>\(f_0 = 10 \text{ Hz}\) :</strong> Fundamental frequency</li>
+                        <li class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> <strong>t:</strong> Time variable (seconds)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Anatomy & Gibbs Phenomenon -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Harmonic Anatomy & Gibbs Phenomenon</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                <div class="glass-card p-8 flex flex-col justify-center">
+                    <h3 class="font-extrabold text-2xl text-blue-800 mb-4">Building the Square Wave</h3>
+                    <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                        A square wave is not a single entity; it's a sum of infinite sine waves:
+                    </p>
+                    <ul class="space-y-4 text-lg text-slate-700 mb-6">
+                        <li class="flex gap-3"><span class="text-blue-500 font-bold">1.</span> <strong>Fundamental (\(f_0\)):</strong> Dictates the main frequency and period.</li>
+                        <li class="flex gap-3"><span class="text-blue-500 font-bold">2.</span> <strong>Higher Harmonics (\(3f_0, 5f_0...\)):</strong> Flatten the peaks and steepen the vertical transition edges.</li>
+                    </ul>
+                    
+                    <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                        <h4 class="font-bold text-red-700 text-xl mb-2">The Gibbs Phenomenon</h4>
+                        <p class="text-slate-700">Notice the "ringing" or overshoots at the sharp edges of our synthesized wave. Mathematically, no matter how many harmonics (N) we add, a ~9% overshoot will always exist at the jump discontinuities.</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-8 flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-indigo-900 text-white relative overflow-hidden">
+                    <div class="absolute opacity-10 right-0 top-0 w-64 h-64">
+                        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2"><path d="M0,50 Q25,0 50,50 T100,50"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-2xl mb-8 z-10 text-blue-200">Visualizing the Summation</h3>
+                    <div class="text-center z-10 space-y-4">
+                        <p class="text-2xl font-mono">$$\sin(\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">+</p>
+                        <p class="text-2xl font-mono">$$\frac{1}{3}\sin(3\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">+</p>
+                        <p class="text-2xl font-mono">$$\frac{1}{5}\sin(5\omega t)$$</p>
+                        <p class="text-2xl font-bold text-blue-400">...</p>
+                        <div class="mt-6 pt-6 border-t border-blue-500/50">
+                            <p class="text-xl italic text-blue-100">"The more harmonics we add, the sharper the edges become."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Mathematical Filtering -->
+    <div class="slide">
+        <div class="content flex flex-col items-center">
+            <h2 class="slide-title text-4xl md:text-5xl self-start">Mathematical Filtering (Ideal Cutoff)</h2>
+            <p class="text-xl md:text-2xl text-slate-600 mb-8 self-start font-medium">How to filter a signal mathematically without MATLAB?</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                <div class="glass-card p-8 rounded-2xl flex flex-col justify-center">
+                    <h3 class="font-extrabold text-2xl text-blue-800 mb-4 border-b-2 border-blue-100 pb-2">The Truncation Method</h3>
+                    <p class="text-lg text-slate-700 leading-relaxed mb-4">
+                        An ideal Low-Pass Filter acts as a <strong>"mathematical scissors"</strong>. We simply stop the summation \(\sum\) and discard any harmonic \(n\) where its frequency \((n \cdot f_0)\) is greater than the cutoff frequency \(f_c\).
+                    </p>
+                    <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                        <p class="font-bold text-blue-900 text-lg mb-2">Condition to pass:</p>
+                        <p class="text-2xl text-center font-bold text-blue-700">$$n \cdot f_0 \le f_c$$</p>
+                    </div>
+                </div>
+
+                <div class="glass-card p-8 rounded-2xl flex flex-col justify-center border-t-4 border-indigo-500">
+                    <h3 class="font-extrabold text-2xl text-indigo-800 mb-4 border-b-2 border-indigo-100 pb-2">Example: \(f_c = 20 \text{ Hz}\)</h3>
+                    <p class="text-slate-600 mb-4">Assuming our fundamental frequency \(f_0 = 10 \text{ Hz}\):</p>
+                    <ul class="space-y-4 text-lg text-slate-700 mb-6">
+                        <li class="flex items-center gap-3"><span class="w-4 h-4 rounded-full bg-green-500"></span> <strong>n = 1 (10 Hz):</strong> \(10 \le 20\) \(\rightarrow\) <span class="font-bold text-green-600">Passes</span></li>
+                        <li class="flex items-center gap-3"><span class="w-4 h-4 rounded-full bg-red-500"></span> <strong>n = 3 (30 Hz):</strong> \(30 > 20\) \(\rightarrow\) <span class="font-bold text-red-600">Blocked</span></li>
+                        <li class="flex items-center gap-3"><span class="w-4 h-4 rounded-full bg-red-500"></span> <strong>n = 5 (50 Hz):</strong> \(50 > 20\) \(\rightarrow\) <span class="font-bold text-red-600">Blocked</span></li>
+                    </ul>
+                    <div class="bg-indigo-50 p-4 rounded-lg text-center shadow-inner">
+                        <p class="text-sm font-bold text-indigo-900 mb-1">Filtered Equation (Pure Sine):</p>
+                        <p class="text-2xl font-extrabold text-indigo-700">$$y_{filt}(t) = \frac{4A}{\pi} \sin(\omega_0 t)$$</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Code - Synthesis -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">MATLAB Code: Synthesis</h2>
+            <div class="code-block mt-4 md:mt-6">
+<span class="code-keyword">fs</span> = <span class="code-number">1000</span>;              <span class="code-comment">% Sampling frequency (Hz)</span>
+<span class="code-keyword">t</span> = <span class="code-number">0</span>:<span class="code-number">1</span>/fs:<span class="code-number">0.5</span>-<span class="code-number">1</span>/fs;    <span class="code-comment">% Time vector</span>
+<span class="code-keyword">f_sig</span> = <span class="code-number">10</span>;             <span class="code-comment">% Fundamental frequency (10 Hz)</span>
+<span class="code-keyword">w0</span> = <span class="code-number">2</span> * <span class="code-keyword">pi</span> * f_sig;    <span class="code-comment">% Angular frequency</span>
+<span class="code-keyword">A</span> = <span class="code-number">1</span>;                  <span class="code-comment">% Amplitude</span>
+
+<span class="code-keyword">x_fourier</span> = <span class="code-function">zeros</span>(<span class="code-function">size</span>(t)); 
+<span class="code-keyword">N_harmonics</span> = <span class="code-number">15</span>;       <span class="code-comment">% Number of odd harmonics</span>
+
+<span class="code-comment">% Build square wave by summing odd harmonics</span>
+<span class="code-keyword">for</span> n = <span class="code-number">1</span>:<span class="code-number">2</span>:N_harmonics
+    x_fourier = x_fourier + (<span class="code-number">1</span>/n) * <span class="code-function">sin</span>(n * w0 * t);
+<span class="code-keyword">end</span>
+
+x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword">pi</span>) * x_fourier; <span class="code-comment">% Final scaling</span>
+            </div>
+            <div class="mt-8 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-l-4 border-blue-500 shadow-sm flex items-center gap-4">
+                <svg class="w-8 h-8 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p class="text-slate-700 text-xl font-semibold"><strong>Key Note:</strong> We synthesize the signal mathematically using a FOR loop instead of built-in functions to prove the Fourier concept.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Code - FFT & Filter -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">MATLAB Code: FFT & Filtering</h2>
+            <div class="code-block mt-4 md:mt-6">
+<span class="code-comment">% --- 1. FFT Analysis ---</span>
+<span class="code-keyword">N</span> = <span class="code-function">length</span>(x_fourier);
+<span class="code-keyword">X</span> = <span class="code-function">fft</span>(x_fourier);
+<span class="code-keyword">X_mag</span> = <span class="code-function">abs</span>(X(<span class="code-number">1</span>:N/<span class="code-number">2</span>+<span class="code-number">1</span>))/(N/<span class="code-number">2</span>);   <span class="code-comment">% Magnitude spectrum</span>
+<span class="code-keyword">f_axis</span> = fs*(<span class="code-number">0</span>:(N/<span class="code-number">2</span>))/N;         <span class="code-comment">% Frequency axis</span>
+
+<span class="code-comment">% --- 2. Low-Pass Filter Design & Application ---</span>
+<span class="code-keyword">filter_order</span> = <span class="code-number">4</span>;
+<span class="code-keyword">fc</span> = <span class="code-number">20</span>;                         <span class="code-comment">% Cutoff frequency: 20 Hz</span>
+
+<span class="code-comment">% Create Butterworth 4th order LPF</span>
+[b, a] = <span class="code-function">butter</span>(filter_order, fc/(fs/<span class="code-number">2</span>), <span class="code-string">'low'</span>);
+
+<span class="code-comment">% Apply filter to the synthesized signal</span>
+<span class="code-keyword">y_filtered</span> = <span class="code-function">filter</span>(b, a, x_fourier);
+            </div>
+            <div class="mt-8 p-5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-l-4 border-purple-500 shadow-sm flex items-center gap-4">
+                <svg class="w-8 h-8 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                <p class="text-slate-700 text-xl"><strong class="text-purple-800 text-2xl">\(\mathbf{f_c = 20 \text{ Hz}}\) :</strong> Safely passes the 10Hz fundamental frequency, while effectively blocking 30Hz, 50Hz, and higher harmonics.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Practical Filtering -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Practical Filtering: The Butterworth Choice</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                <div class="space-y-6">
+                    <div class="glass-card p-6 border-t-4 border-blue-500">
+                        <h3 class="font-bold text-xl text-blue-900 mb-2">Ideal vs. Real Filters</h3>
+                        <p class="text-slate-700 text-lg">An "Ideal" filter (Brick-wall) cuts off frequencies instantly at \(f_c\). However, this is mathematically impossible to implement in real-time causal systems. Practical filters have a <strong>Transition Band (Roll-off)</strong>.</p>
+                    </div>
+                    
+                    <div class="glass-card p-6 border-t-4 border-indigo-500">
+                        <h3 class="font-bold text-xl text-indigo-900 mb-2">Why Butterworth?</h3>
+                        <p class="text-slate-700 text-lg">We selected the Butterworth filter because it is designed to have a <strong>"Maximally Flat"</strong> passband. It introduces no ripples to our passed frequencies, preserving the shape of our 10Hz fundamental perfectly.</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-8 flex flex-col justify-center bg-slate-50 border border-slate-200">
+                    <div class="text-center mb-6">
+                        <h3 class="font-bold text-2xl text-slate-800 mb-2">The Roll-off Effect</h3>
+                        <p class="text-slate-600 text-lg">Using a 4th-Order Filter (\(n=4\))</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-inner text-center">
+                        <p class="text-xl text-slate-700 mb-4">The attenuation rate is:</p>
+                        <p class="text-3xl font-extrabold text-blue-600 mb-4">\(-24 \text{ dB/octave}\)</p>
+                        <p class="text-lg text-slate-600 italic">
+                            "This explains why a frequency like 30Hz (close to the 20Hz cutoff) is heavily reduced, but not instantly zeroed out. Higher filter orders would create a steeper drop."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Results (LIVE PLOTS) -->
+    <div class="slide" id="results-slide">
+        <div class="content flex flex-col h-full">
+            <h2 class="slide-title text-4xl md:text-5xl mb-2">Results: Live Interactive Filter</h2>
+            
+            <!-- Interactive Slider Control -->
+            <div class="mb-4 bg-white/90 p-4 rounded-xl border-2 border-blue-200 shadow-md flex items-center gap-6 z-20 relative">
+                <div class="flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    <label for="fc-slider" class="font-extrabold text-slate-800 whitespace-nowrap text-xl">Adjust Cutoff Frequency (f<sub>c</sub>):</label>
+                </div>
+                <input type="range" id="fc-slider" min="0" max="150" step="5" value="20" class="flex-grow">
+                <div class="bg-blue-600 text-white rounded-lg px-4 py-2 min-w-[100px] text-center shadow-inner">
+                    <span id="fc-value" class="font-black text-2xl">20</span> <span class="font-semibold text-blue-200">Hz</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 flex-grow">
+                <div class="chart-grid">
+                    <div class="chart-box">
+                        <canvas id="chartTimeOrg"></canvas>
+                        <div class="print-img-container" id="img-chartTimeOrg"></div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chartFreqOrg"></canvas>
+                        <div class="print-img-container" id="img-chartFreqOrg"></div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chartTimeFilt"></canvas>
+                        <div class="print-img-container" id="img-chartTimeFilt"></div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="chartFreqFilt"></canvas>
+                        <div class="print-img-container" id="img-chartFreqFilt"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: Conclusion -->
+    <div class="slide">
+        <div class="content">
+            <h2 class="slide-title text-4xl md:text-5xl">Conclusion</h2>
+            <div class="flex flex-col gap-6 md:gap-8 mt-6 md:mt-10">
+                <div class="stagger-item glass-card p-6 md:p-8 border-l-4 border-blue-500">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">1</div>
+                        <h3 class="font-extrabold text-2xl text-slate-800">Mathematical Validation</h3>
+                    </div>
+                    <p class="text-slate-600 text-xl pl-14">A square wave was successfully synthesized by summing odd harmonics, proving practically that complex periodic signals are built from simple sine waves.</p>
+                </div>
+                
+                <div class="stagger-item glass-card p-6 md:p-8 border-l-4 border-indigo-500">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">2</div>
+                        <h3 class="font-extrabold text-2xl text-slate-800">Spectral Analysis</h3>
+                    </div>
+                    <p class="text-slate-600 text-xl pl-14">FFT analysis accurately revealed the harmonic structure, showing distinct peaks at the fundamental frequency (10Hz) and odd harmonics (30Hz, 50Hz...).</p>
+                </div>
+
+                <div class="stagger-item glass-card p-6 md:p-8 border-l-4 border-purple-500">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xl">3</div>
+                        <h3 class="font-extrabold text-2xl text-slate-800">Filter Impact</h3>
+                    </div>
+                    <p class="text-slate-600 text-xl pl-14">The Low-Pass Filter successfully removed high-frequency components. This demonstrated that sharp edges in digital signals depend entirely on high frequencies, and removing them results in a smooth sine wave.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Q&A / Thank You -->
+    <div class="slide">
+        <div class="content flex flex-col justify-center items-center h-full text-center mt-12 md:mt-20 relative">
+            <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-8 shadow-inner animate-bounce" style="animation-duration: 3s;">
+                <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl font-extrabold text-slate-900 mb-6 uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                Thank You!
+            </h1>
+            
+            <div class="w-32 h-1.5 bg-blue-500 mb-8 mx-auto rounded-full"></div>
+            
+            <p class="text-2xl text-slate-700 mb-12 max-w-3xl leading-relaxed">
+                We appreciate your time and attention.<br> 
+                <span class="font-semibold">We are now open to any questions</span> regarding the mathematical synthesis, MATLAB implementation, or the live filter demonstration.
+            </p>
+            
+            <div class="glass-card px-10 py-5 inline-flex items-center gap-4 shadow-lg border-blue-200">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <p class="text-2xl font-bold text-blue-900">Ahmed Qays & Hussein Fahem</p>
+            </div>
+
+            <!-- Semi-hidden PDF Controls (Hover to see) -->
+            <div class="absolute bottom-[-150px] right-0 flex gap-2 pdf-controls">
+                <button onclick="prepareAndPrint(1)" class="pdf-btn">PDF (1x)</button>
+                <button onclick="prepareAndPrint(2)" class="pdf-btn">PDF (2x)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Controls (Slide Numbers only) -->
+    <div class="controls-wrapper">
+        <div class="slide-number" id="slideNum">1 / 12</div>
+    </div>
+</div>
+
+<script>
+    // --- Presentation Navigation Logic ---
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const slideNum = document.getElementById('slideNum');
+    const progressBar = document.getElementById('progress-bar');
+    let chartsInitialized = false; 
+
+    // Global chart instances
+    let chartTimeOrg, chartFreqOrg, chartTimeFilt, chartFreqFilt;
+
+    // Signal parameters
+    const fs = 1000;
+    const numPoints = 500; 
+    const t = Array.from({length: numPoints}, (_, i) => i / fs);
+    const f0 = 10;
+    const w0 = 2 * Math.PI * f0;
+    const A = 1;
+    const N_harmonics = 15;
+    const filter_order = 4;
+    const freqs = Array.from({length: 16}, (_, i) => i * 10); 
+
+    function updateProgress() {
+        const progress = (currentSlide / (slides.length - 1)) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    function changeSlide(direction) {
+        slides[currentSlide].style.opacity = '0';
+        slides[currentSlide].style.transform = direction > 0 ? 'translateY(-20px) scale(0.98)' : 'translateY(20px) scale(0.98)';
+        
+        setTimeout(() => {
+            slides[currentSlide].classList.remove('active');
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+            
+            slides[currentSlide].classList.add('active');
+            void slides[currentSlide].offsetWidth; 
+            slides[currentSlide].style.opacity = '1';
+            slides[currentSlide].style.transform = 'translateY(0) scale(1)';
+            slides[currentSlide].scrollTop = 0;
+            
+            slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
+            updateProgress();
+            
+            if (window.MathJax) MathJax.typesetPromise();
+            
+            // Initialize charts if we reach slide 10 (index 9)
+            if (currentSlide === 9 && !chartsInitialized) {
+                initCharts();
+                updateChartsData(20); 
+                chartsInitialized = true;
+            }
+        }, 300);
+    }
+    
+    updateProgress();
+    slides[currentSlide].style.opacity = '1';
+    slides[currentSlide].style.transform = 'translateY(0) scale(1)';
+    
+    // Keyboard navigation (Arrows + Spacebar)
+    document.addEventListener('keydown', function(event) {
+        if (event.target.id === 'fc-slider') return; 
+        
+        // Go forward on Right Arrow or Spacebar
+        if ((event.key === 'ArrowRight' || event.code === 'Space') && currentSlide < slides.length - 1) {
+            if (event.code === 'Space') event.preventDefault(); // Prevent scrolling down on Space
+            changeSlide(1);
+        }
+        // Go backward on Left Arrow
+        else if (event.key === 'ArrowLeft' && currentSlide > 0) {
+            changeSlide(-1);
+        }
+    });
+
+    // --- Interactive Logic & Chart.js ---
+    
+    const fcSlider = document.getElementById('fc-slider');
+    const fcValueDisplay = document.getElementById('fc-value');
+    
+    fcSlider.addEventListener('input', function(e) {
+        const cutoff = parseFloat(e.target.value);
+        fcValueDisplay.innerText = cutoff;
+        if (chartsInitialized) { updateChartsData(cutoff); }
+    });
+
+    function initCharts() {
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#475569';
+        
+        const commonLineOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+            scales: {
+                x: { title: { display: true, text: 'Time (s)', font: { weight: 'bold' } }, grid: { display: false } },
+                y: { min: -1.5, max: 1.5, title: { display: true, text: 'Amplitude', font: { weight: 'bold' } } }
+            },
+            elements: { point: { radius: 0 }, line: { tension: 0.1 } }, 
+            animation: { duration: 0 } 
+        };
+
+        const commonBarOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { weight: 'bold' } } } },
+            scales: {
+                x: { title: { display: true, text: 'Frequency (Hz)', font: { weight: 'bold' } }, grid: { display: false } },
+                y: { min: 0, max: 1.4, title: { display: true, text: 'Magnitude', font: { weight: 'bold' } } }
+            },
+            animation: { duration: 0 }
+        };
+
+        chartTimeOrg = new Chart(document.getElementById('chartTimeOrg'), {
+            type: 'line',
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Synthesized Square Wave', data: [], borderColor: '#0f172a', borderWidth: 2 }] },
+            options: commonLineOptions 
+        });
+
+        chartFreqOrg = new Chart(document.getElementById('chartFreqOrg'), {
+            type: 'bar',
+            data: { labels: freqs, datasets: [{ label: 'Original Spectrum (FFT)', data: [], backgroundColor: '#0f172a', barThickness: 5, borderRadius: 2 }] },
+            options: commonBarOptions 
+        });
+
+        chartTimeFilt = new Chart(document.getElementById('chartTimeFilt'), {
+            type: 'line',
+            data: { labels: t.map(time => time.toFixed(2)), datasets: [{ label: 'Filtered Signal', data: [], borderColor: '#ef4444', borderWidth: 2 }] },
+            options: commonLineOptions
+        });
+
+        chartFreqFilt = new Chart(document.getElementById('chartFreqFilt'), {
+            type: 'bar',
+            data: { labels: freqs, datasets: [{ label: 'Filtered Spectrum', data: [], backgroundColor: '#ef4444', barThickness: 5, borderRadius: 2 }] },
+            options: commonBarOptions
+        });
+    }
+
+    function updateChartsData(cutoffFreq) {
+        const x_mag = [];
+        const y_mag = [];
+        
+        freqs.forEach(f => {
+            let n = f / 10;
+            if (n % 2 !== 0 && n <= N_harmonics) { 
+                let original_magnitude = 4 * A / (Math.PI * n);
+                x_mag.push(original_magnitude);
+                let gain = cutoffFreq > 0 ? 1 / Math.sqrt(1 + Math.pow(f / cutoffFreq, 2 * filter_order)) : 0;
+                y_mag.push(original_magnitude * gain);
+            } else {
+                x_mag.push(0);
+                y_mag.push(0);
+            }
+        });
+
+        const x_fourier = t.map(time => {
+            let sum = 0;
+            for(let n = 1; n <= N_harmonics; n += 2) {
+                sum += (4 * A / (Math.PI * n)) * Math.sin(n * w0 * time);
+            }
+            return sum;
+        });
+
+        const y_filtered = t.map(time => {
+            let sum = 0;
+            for(let n = 1; n <= N_harmonics; n += 2) {
+                let f = n * 10;
+                let gain = cutoffFreq > 0 ? 1 / Math.sqrt(1 + Math.pow(f / cutoffFreq, 2 * filter_order)) : 0;
+                sum += (4 * A / (Math.PI * n)) * gain * Math.sin(n * w0 * time);
+            }
+            return sum;
+        });
+
+        if(chartTimeOrg) {
+            chartTimeOrg.data.datasets[0].data = x_fourier;
+            chartTimeOrg.update('none'); 
+            chartFreqOrg.data.datasets[0].data = x_mag;
+            chartFreqOrg.update('none');
+            chartTimeFilt.data.datasets[0].data = y_filtered;
+            chartTimeFilt.data.datasets[0].label = `Filtered Signal (LPF, fc = ${cutoffFreq}Hz)`;
+            chartTimeFilt.update('none');
+            chartFreqFilt.data.datasets[0].data = y_mag;
+            chartFreqFilt.update('none');
+        }
+    }
+
+    // --- Dynamic Print Function ---
+    function prepareAndPrint(mode) {
+        const originalSlide = currentSlide;
+        const resultsSlide = document.getElementById('results-slide');
+        
+        // Setup proper @page CSS based on user selection
+        let pageStyle = document.getElementById('print-page-style');
+        if (!pageStyle) {
+            pageStyle = document.createElement('style');
+            pageStyle.id = 'print-page-style';
+            document.head.appendChild(pageStyle);
+        }
+
+        if (mode === 2) {
+            pageStyle.innerHTML = `@page { size: A4 portrait; margin: 10mm; }`;
+            document.body.classList.add('print-double');
+            document.body.classList.remove('print-single');
+        } else {
+            pageStyle.innerHTML = `@page { size: A4 landscape; margin: 0; }`;
+            document.body.classList.add('print-single');
+            document.body.classList.remove('print-double');
+        }
+        
+        slides.forEach(s => { 
+            s.style.display = 'flex';
+            s.style.opacity = '1';
+            s.style.transform = 'none';
+            s.classList.add('active');
+        });
+
+        setTimeout(() => {
+            if (!chartsInitialized) {
+                initCharts();
+                updateChartsData(20);
+                chartsInitialized = true;
+            } else {
+                chartTimeOrg.resize(); chartFreqOrg.resize();
+                chartTimeFilt.resize(); chartFreqFilt.resize();
+                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
+            }
+
+            setTimeout(() => {
+                document.getElementById('img-chartTimeOrg').innerHTML = `<img src="${document.getElementById('chartTimeOrg').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartFreqOrg').innerHTML = `<img src="${document.getElementById('chartFreqOrg').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartTimeFilt').innerHTML = `<img src="${document.getElementById('chartTimeFilt').toDataURL('image/png')}" />`;
+                document.getElementById('img-chartFreqFilt').innerHTML = `<img src="${document.getElementById('chartFreqFilt').toDataURL('image/png')}" />`;
+
+                window.print();
+
+                setTimeout(() => {
+                    slides.forEach((s, index) => {
+                        if (index !== originalSlide) {
+                            s.style.display = 'none';
+                            s.style.opacity = '0';
+                            s.classList.remove('active');
+                        }
+                    });
+                    document.body.classList.remove('print-single', 'print-double');
+                }, 500);
+
+            }, 800); 
+        }, 100); 
+    }
+</script>
+
+</body>
+</html>
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
             svg: { fontCache: 'global' }
         };
