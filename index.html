@@ -132,7 +132,7 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
 
-        /* --- Custom PDF Buttons on Last Slide --- */
+        /* --- PDF Buttons --- */
         .pdf-controls {
             position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
             opacity: 0.05; transition: opacity 0.3s ease; z-index: 100; pointer-events: auto;
@@ -146,15 +146,22 @@
         }
         .pdf-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
 
+        /* Loading Overlay */
+        #print-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(248, 250, 252, 0.95);
+            z-index: 9999; justify-content: center; align-items: center; flex-direction: column;
+        }
+
         /* --- MAGIC CSS FOR PERFECT NATIVE PDF EXPORT --- */
         @media print {
             @page { 
-                size: 16in 9in; /* يفرض قياس العرض التقديمي الأصلي 16:9 بدلاً من ورق A4 المربع */
+                size: 16in 9in; /* يفرض قياس العرض التقديمي الأصلي 16:9 */
                 margin: 0; 
             }
             body, html { 
+                display: block !important;
                 width: 16in !important;
-                height: 9in !important;
+                height: auto !important;
                 background-color: white !important; 
                 overflow: visible !important;
                 -webkit-print-color-adjust: exact !important; 
@@ -162,20 +169,22 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            /* إخفاء الأزرار وشريط التقدم أثناء الطباعة */
-            #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls { 
+            /* إخفاء الأزرار وشريط التقدم وشاشة التحميل أثناء الطباعة */
+            #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls, #print-overlay { 
                 display: none !important; 
             }
             .slide-container { 
-                height: auto !important; 
-                width: 16in !important; 
-                overflow: visible !important; 
                 display: block !important; 
+                position: static !important; /* هذا يلغي تداخل الصفحات (طيرانها) */
+                width: 16in !important; 
+                height: auto !important; 
+                overflow: visible !important; 
             }
-            /* جعل جميع الشرائح مرئية للطباعة بنفس الترتيب والأبعاد */
+            /* جعل جميع الشرائح مرئية ومكدسة عمودياً بدلاً من وضعها فوق بعضها */
             .slide {
-                position: relative !important;
+                position: relative !important; 
                 display: flex !important;
+                flex-direction: column !important;
                 width: 16in !important;
                 height: 9in !important;
                 page-break-after: always !important;
@@ -184,12 +193,16 @@
                 opacity: 1 !important;
                 transform: none !important;
                 overflow: hidden !important;
-                background: #f8fafc !important; /* يحافظ على خلفية السلايدات */
+                background: #f8fafc !important;
+                box-sizing: border-box !important;
             }
             .slide:last-child { page-break-after: auto !important; }
+            
+            /* إلغاء جميع الحركات لتسريع الطباعة وتجنب التهنيج */
+            * { transition: none !important; animation: none !important; }
             .stagger-item { opacity: 1 !important; transform: none !important; }
             
-            /* تثبيت قياسات المخططات (Charts) لتجنب انضغاطها */
+            /* تثبيت قياسات المخططات (Charts) */
             .chart-grid { 
                 display: grid !important; 
                 height: 5.5in !important; 
@@ -203,13 +216,37 @@
                 padding: 10px !important; 
                 box-shadow: none !important; 
                 border: 1px solid #e2e8f0 !important; 
+                background: white !important;
             }
-            /* إزالة الظلال الثقيلة لتسريع الطباعة */
-            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            /* إخفاء الـ Canvas وعرض الصورة الملتقطة بدلاً منه */
+            canvas { display: none !important; }
+            .print-chart-img {
+                display: block !important;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            
+            /* إزالة الظلال الزجاجية الثقيلة لتسريع الطباعة */
+            .glass-card { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+                background: white !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
         }
+        .print-chart-img { display: none; }
     </style>
 </head>
 <body>
+
+<!-- شاشة التحميل للطباعة -->
+<div id="print-overlay">
+    <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+    <h2 class="text-3xl font-bold text-slate-800">تجهيز الملف للطباعة...</h2>
+    <p class="text-slate-500 mt-2">يرجى الانتظار للحظات</p>
+</div>
 
 <div id="progress-container"><div id="progress-bar"></div></div>
 
@@ -555,15 +592,19 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                 <div class="chart-grid">
                     <div class="chart-box">
                         <canvas id="chartTimeOrg"></canvas>
+                        <img class="print-chart-img" id="img-chartTimeOrg" alt="">
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqOrg"></canvas>
+                        <img class="print-chart-img" id="img-chartFreqOrg" alt="">
                     </div>
                     <div class="chart-box">
                         <canvas id="chartTimeFilt"></canvas>
+                        <img class="print-chart-img" id="img-chartTimeFilt" alt="">
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqFilt"></canvas>
+                        <img class="print-chart-img" id="img-chartFreqFilt" alt="">
                     </div>
                 </div>
             </div>
@@ -639,6 +680,12 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
     <div class="controls-wrapper">
         <div class="slide-number" id="slideNum">1 / 12</div>
     </div>
+</div>
+
+<!-- شاشة التحميل للطباعة -->
+<div id="print-overlay">
+    <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+    <h2 class="text-3xl font-bold text-slate-800">تجهيز الملف للطباعة...</h2>
 </div>
 
 <script>
@@ -824,26 +871,61 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         }
     }
 
-    // --- Fast Native Print Function ---
+    // --- Fast Native Print Function (FIXED FOR EXACT 16:9 RENDERING) ---
     function printNativePDF() {
+        const overlay = document.getElementById('print-overlay');
+        overlay.style.display = 'flex';
+        
+        const originalSlide = currentSlide;
+        const resultsSlideIndex = 9; // Slide 10
+
         if (!chartsInitialized) {
             initCharts();
             updateChartsData(20);
             chartsInitialized = true;
         }
 
-        // إجبار المخططات على إعادة قياس نفسها لتناسب حجم الطباعة الجديد
-        if (chartTimeOrg) {
-            chartTimeOrg.resize();
-            chartFreqOrg.resize();
-            chartTimeFilt.resize();
-            chartFreqFilt.resize();
-        }
+        // نجبر السلايد الخاص بالرسومات على الظهور مؤقتاً لكي يأخذ أبعاده الحقيقية
+        slides.forEach(s => { s.style.opacity = '0'; s.classList.remove('active'); s.style.display = 'none'; });
+        slides[resultsSlideIndex].style.display = 'flex';
+        slides[resultsSlideIndex].style.opacity = '1';
+        slides[resultsSlideIndex].classList.add('active');
 
-        // نعطي المتصفح نصف ثانية لتجهيز الرسومات والمعادلات ثم نظهر نافذة الطباعة
+        // نعطي المتصفح 50 جزء من الثانية ليطبق الـ CSS
         setTimeout(() => {
-            window.print();
-        }, 500);
+            if(chartTimeOrg) {
+                chartTimeOrg.resize(); chartFreqOrg.resize();
+                chartTimeFilt.resize(); chartFreqFilt.resize();
+            }
+
+            // نعطي الرسم البياني وقتاً للرسم
+            setTimeout(() => {
+                // تحويل الـ Canvas إلى صور فورية (هذا يمنع ظهورها بيضاء في الطباعة)
+                document.getElementById('img-chartTimeOrg').src = document.getElementById('chartTimeOrg').toDataURL('image/png', 1.0);
+                document.getElementById('img-chartFreqOrg').src = document.getElementById('chartFreqOrg').toDataURL('image/png', 1.0);
+                document.getElementById('img-chartTimeFilt').src = document.getElementById('chartTimeFilt').toDataURL('image/png', 1.0);
+                document.getElementById('img-chartFreqFilt').src = document.getElementById('chartFreqFilt').toDataURL('image/png', 1.0);
+
+                // إرجاع الشاشة للسلايد الذي كنت تقف عليه
+                slides.forEach((s, i) => {
+                    if (i === originalSlide) {
+                        s.style.display = 'flex';
+                        s.style.opacity = '1';
+                        s.classList.add('active');
+                    } else {
+                        s.style.display = 'none';
+                        s.style.opacity = '0';
+                        s.classList.remove('active');
+                    }
+                });
+
+                overlay.style.display = 'none';
+
+                // تشغيل الطباعة
+                setTimeout(() => { window.print(); }, 100);
+
+            }, 300);
+        }, 50);
     }
 </script>
 
