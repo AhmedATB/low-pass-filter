@@ -19,6 +19,10 @@
     <!-- Chart.js for Live Interactive Plotting -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Professional PDF Generation Libraries (Image-based) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <!-- Modern Premium Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,9 +136,6 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
 
-        /* Print Images Container */
-        .print-img-container { display: none; width: 100%; height: 100%; }
-
         /* --- Custom PDF Buttons on Last Slide --- */
         .pdf-controls {
             position: absolute;
@@ -142,7 +143,7 @@
             right: 20px;
             display: flex;
             gap: 10px;
-            opacity: 0.05; /* شبه مخفية تماماً */
+            opacity: 0.1; /* شبه مخفية تماماً */
             transition: opacity 0.3s ease;
             z-index: 100;
         }
@@ -151,76 +152,38 @@
         }
         .pdf-btn {
             background: rgba(255, 255, 255, 0.9); border: 1px solid #cbd5e1;
-            color: #475569; font-size: 0.8rem; font-weight: 600; padding: 6px 12px;
+            color: #475569; font-size: 0.9rem; font-weight: bold; padding: 8px 16px;
             border-radius: 6px; cursor: pointer; transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 6px;
         }
-        .pdf-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
+        .pdf-btn:hover { background: #2563eb; color: white; border-color: #2563eb; }
+        .pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* --- Print Specific Styles for A4 PDF Generation --- */
-        @media print {
-            body { 
-                background: white !important; 
-                overflow: visible !important;
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            }
-            #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls { display: none !important; }
-            .slide-container { 
-                height: auto !important; width: 100% !important; overflow: visible !important; display: block !important; 
-            }
-            
-            /* Print charts correctly */
-            .chart-grid { display: grid !important; height: auto !important; min-height: auto !important; gap: 15px !important;}
-            .chart-box { padding: 5px !important; box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
-            canvas { display: none !important; }
-            .print-img-container {
-                display: flex !important; justify-content: center; align-items: center; width: 100%; height: 100%;
-            }
-            .print-img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
-            .glass-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
-            .stagger-item { opacity: 1 !important; transform: none !important; }
-
-            /* ========================================= */
-            /* MODE 1: Single Slide per Page (Landscape) */
-            /* ========================================= */
-            body.print-single .slide {
-                position: relative !important;
-                display: flex !important;
-                width: 297mm !important;
-                height: 167mm !important; /* Force 16:9 Aspect Ratio */
-                margin: 0 auto !important; /* Center on the 210mm A4 height */
-                page-break-after: always !important;
-                page-break-inside: avoid !important;
-                padding: 4% 6% !important;
-                opacity: 1 !important;
-                transform: none !important;
-                overflow: hidden !important;
-            }
-            body.print-single .slide:last-child { page-break-after: auto !important; }
-
-            /* ========================================= */
-            /* MODE 2: Two Slides per Page (Portrait)    */
-            /* ========================================= */
-            body.print-double .slide {
-                position: relative !important;
-                display: flex !important;
-                width: 190mm !important; /* Width fitting A4 Portrait minus 20mm margins */
-                height: 107mm !important; /* Forced 16:9 Aspect Ratio */
-                margin: 0 auto 15mm auto !important; /* Space between slides */
-                page-break-inside: avoid !important;
-                page-break-after: auto !important;
-                padding: 4% 6% !important;
-                opacity: 1 !important;
-                transform: none !important;
-                border: 2px solid #cbd5e1 !important;
-                border-radius: 12px !important;
-                box-sizing: border-box !important;
-            }
+        /* PDF Loader Overlay */
+        #pdf-loader {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px);
+            z-index: 9999; display: none; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
         }
+        .spinner {
+            width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: #3b82f6; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+
+<!-- Loading Overlay for PDF Generation -->
+<div id="pdf-loader">
+    <div class="spinner"></div>
+    <h2 class="text-3xl font-bold mb-2">Generating PDF...</h2>
+    <p id="pdf-progress" class="text-xl text-blue-300">Capturing Slide 1 of 12</p>
+    <p class="text-sm text-slate-400 mt-4">Please wait, taking high-quality snapshots.</p>
+</div>
 
 <div id="progress-container"><div id="progress-bar"></div></div>
 
@@ -563,22 +526,18 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             </div>
 
             <div class="glass-card p-4 flex-grow">
-                <div class="chart-grid">
+                <div class="chart-grid" id="chart-capture-area">
                     <div class="chart-box">
                         <canvas id="chartTimeOrg"></canvas>
-                        <div class="print-img-container" id="img-chartTimeOrg"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqOrg"></canvas>
-                        <div class="print-img-container" id="img-chartFreqOrg"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartTimeFilt"></canvas>
-                        <div class="print-img-container" id="img-chartTimeFilt"></div>
                     </div>
                     <div class="chart-box">
                         <canvas id="chartFreqFilt"></canvas>
-                        <div class="print-img-container" id="img-chartFreqFilt"></div>
                     </div>
                 </div>
             </div>
@@ -642,8 +601,10 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
             <!-- Semi-hidden PDF Controls (Hover to see) -->
             <div class="absolute bottom-4 right-4 flex gap-2 pdf-controls z-50">
-                <button onclick="prepareAndPrint(1)" class="pdf-btn">PDF (1x)</button>
-                <button onclick="prepareAndPrint(2)" class="pdf-btn">PDF (2x)</button>
+                <button onclick="generateHighQualityPDF()" class="pdf-btn" id="pdf-btn-download">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span id="pdf-text">Download PDF</span>
+                </button>
             </div>
         </div>
     </div>
@@ -839,68 +800,113 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         }
     }
 
-    // --- Dynamic Print Function ---
-    function prepareAndPrint(mode) {
-        const originalSlide = currentSlide;
-        const resultsSlide = document.getElementById('results-slide');
+    // --- NEW: Professional High-Quality PDF Export (Image-based) ---
+    async function generateHighQualityPDF() {
+        // Prevent multiple clicks
+        const btn = document.getElementById('pdf-btn-download');
+        const btnText = document.getElementById('pdf-text');
+        const loader = document.getElementById('pdf-loader');
+        const progressText = document.getElementById('pdf-progress');
         
-        // Setup proper @page CSS based on user selection
-        let pageStyle = document.getElementById('print-page-style');
-        if (!pageStyle) {
-            pageStyle = document.createElement('style');
-            pageStyle.id = 'print-page-style';
-            document.head.appendChild(pageStyle);
-        }
-
-        if (mode === 2) {
-            pageStyle.innerHTML = `@page { size: A4 portrait; margin: 10mm; }`;
-            document.body.classList.add('print-double');
-            document.body.classList.remove('print-single');
-        } else {
-            pageStyle.innerHTML = `@page { size: A4 landscape; margin: 0; }`;
-            document.body.classList.add('print-single');
-            document.body.classList.remove('print-double');
-        }
+        btn.disabled = true;
+        loader.style.display = 'flex';
         
-        slides.forEach(s => { 
-            s.style.display = 'flex';
-            s.style.opacity = '1';
-            s.style.transform = 'none';
-            s.classList.add('active');
+        const originalSlideIndex = currentSlide;
+        
+        // Initialize jsPDF (Landscape, format matches typical 16:9 Presentation 1920x1080)
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [1920, 1080]
         });
 
-        setTimeout(() => {
-            if (!chartsInitialized) {
-                initCharts();
-                updateChartsData(20);
-                chartsInitialized = true;
-            } else {
-                chartTimeOrg.resize(); chartFreqOrg.resize();
-                chartTimeFilt.resize(); chartFreqFilt.resize();
-                updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
+        // Make sure charts are ready
+        if (!chartsInitialized) {
+            initCharts();
+            updateChartsData(20);
+            chartsInitialized = true;
+        }
+
+        // Loop through all slides
+        for (let i = 0; i < slides.length; i++) {
+            progressText.innerText = `Capturing Slide ${i + 1} of ${slides.length}...`;
+            
+            // Show only the current slide for capturing
+            slides.forEach((s, idx) => {
+                if (idx === i) {
+                    s.style.display = 'flex';
+                    s.style.opacity = '1';
+                    s.style.transform = 'translateY(0) scale(1)';
+                    s.classList.add('active');
+                } else {
+                    s.style.display = 'none';
+                    s.style.opacity = '0';
+                    s.classList.remove('active');
+                }
+            });
+
+            // Wait a moment for MathJax and Charts to settle visually
+            await new Promise(r => setTimeout(r, 400));
+
+            // Hide UI elements we don't want in the PDF
+            document.getElementById('progress-container').style.display = 'none';
+            document.querySelector('.controls-wrapper').style.display = 'none';
+            if(i === slides.length - 1) {
+                document.querySelector('.pdf-controls').style.display = 'none';
             }
 
-            setTimeout(() => {
-                document.getElementById('img-chartTimeOrg').innerHTML = `<img src="${document.getElementById('chartTimeOrg').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartFreqOrg').innerHTML = `<img src="${document.getElementById('chartFreqOrg').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartTimeFilt').innerHTML = `<img src="${document.getElementById('chartTimeFilt').toDataURL('image/png')}" />`;
-                document.getElementById('img-chartFreqFilt').innerHTML = `<img src="${document.getElementById('chartFreqFilt').toDataURL('image/png')}" />`;
+            // Capture the slide as an image using html2canvas
+            const canvas = await html2canvas(slides[i], {
+                scale: 2, // High resolution
+                useCORS: true,
+                backgroundColor: '#f8fafc',
+                logging: false
+            });
 
-                window.print();
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-                setTimeout(() => {
-                    slides.forEach((s, index) => {
-                        if (index !== originalSlide) {
-                            s.style.display = 'none';
-                            s.style.opacity = '0';
-                            s.classList.remove('active');
-                        }
-                    });
-                    document.body.classList.remove('print-single', 'print-double');
-                }, 500);
+            // Add new page for slides after the first one
+            if (i > 0) {
+                doc.addPage([1920, 1080], 'landscape');
+            }
+            
+            // Add image to PDF
+            doc.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
 
-            }, 800); 
-        }, 100); 
+            // Restore UI elements
+            document.getElementById('progress-container').style.display = 'block';
+            document.querySelector('.controls-wrapper').style.display = 'flex';
+            if(i === slides.length - 1) {
+                document.querySelector('.pdf-controls').style.display = 'flex';
+            }
+        }
+
+        progressText.innerText = "Saving PDF file...";
+        await new Promise(r => setTimeout(r, 200));
+
+        // Save the PDF
+        doc.save('Fourier_Series_Presentation.pdf');
+
+        // Restore original state
+        loader.style.display = 'none';
+        btn.disabled = false;
+        
+        currentSlide = originalSlideIndex;
+        slides.forEach((s, idx) => {
+            if (idx === currentSlide) {
+                s.style.display = 'flex';
+                s.style.opacity = '1';
+                s.style.transform = 'translateY(0) scale(1)';
+                s.classList.add('active');
+            } else {
+                s.style.display = 'none';
+                s.style.opacity = '0';
+                s.classList.remove('active');
+            }
+        });
+        slideNum.innerText = (currentSlide + 1) + " / " + slides.length;
+        updateProgress();
     }
 </script>
 
