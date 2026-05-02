@@ -132,7 +132,7 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #cbd5e1; border-radius: 4px; }
         input[type=range]:focus { outline: none; }
 
-        /* --- Custom PDF Buttons on Last Slide --- */
+        /* --- PDF Buttons --- */
         .pdf-controls {
             position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;
             opacity: 0.05; transition: opacity 0.3s ease; z-index: 100; pointer-events: auto;
@@ -155,16 +155,16 @@
         .print-chart-img { display: none; }
 
         /* ==================================================================== */
-        /* --- MAGIC CSS FOR PERFECT NATIVE PDF EXPORT (NO DISTORTION EVER) --- */
+        /* --- NATIVE PDF EXPORT WITH CUSTOM SCALE ENABLED --- */
         /* ==================================================================== */
         @media print {
             @page { 
-                size: 297mm 167mm; /* قياس ثابت يفرض نسبة 16:9 دائمًا لمنع تغير الحجم أو طيران الصفحات */
+                size: landscape; /* إرجاع خيار Landscape الافتراضي لكي يظهر خيار Custom Scale دائمًا */
                 margin: 0 !important; 
             }
             body, html { 
                 display: block !important;
-                width: 297mm !important;
+                width: 100% !important;
                 height: auto !important;
                 background-color: white !important; 
                 -webkit-print-color-adjust: exact !important; 
@@ -172,7 +172,7 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
-            /* إخفاء الأزرار وشريط التقدم وشاشة التحميل أثناء الطباعة */
+            /* إخفاء الأزرار وشاشة التحميل أثناء الطباعة */
             #progress-container, .controls-wrapper, .bg-pattern, .pdf-controls, #print-overlay { 
                 display: none !important; 
             }
@@ -183,15 +183,15 @@
                 height: auto !important; 
                 overflow: visible !important; 
             }
-            /* إجبار كل شريحة لتكون بحجم صفحة العرض تمامًا (كأنها صورة صلبة) */
+            /* جعل الشريحة تأخذ ارتفاع الورقة بالكامل لمنع انقسامها */
             .slide {
                 position: relative !important; 
                 display: flex !important;
                 flex-direction: column !important;
-                width: 297mm !important;
-                height: 167mm !important;
-                page-break-after: always !important;
-                page-break-inside: avoid !important;
+                width: 100vw !important;
+                height: 100vh !important; /* ضمان ملء الورقة الواحدة بدقة */
+                page-break-after: always !important; /* فاصل صفحات إجباري بعد كل شريحة */
+                page-break-inside: avoid !important; /* منع قص الشريحة من المنتصف */
                 padding: 4% 6% !important;
                 opacity: 1 !important;
                 transform: none !important;
@@ -205,7 +205,7 @@
             * { transition: none !important; animation: none !important; }
             .stagger-item { opacity: 1 !important; transform: none !important; }
             
-            /* تثبيت قياسات المخططات (Charts) */
+            /* تثبيت قياسات المخططات (Charts) لتلائم الورقة */
             .chart-grid { 
                 display: grid !important; 
                 height: 100% !important; 
@@ -235,7 +235,7 @@
                 object-fit: contain !important;
             }
             
-            /* إزالة الظلال الزجاجية الثقيلة لتسريع الطباعة، ولكن مع الحفاظ على الألوان لمنع اختفاء المعادلات */
+            /* إزالة الظلال الزجاجية للحفاظ على نقاء الطباعة */
             .glass-card { 
                 box-shadow: none !important; 
                 backdrop-filter: none !important;
@@ -683,7 +683,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
 
     <!-- Navigation Controls (Slide Numbers only) -->
     <div class="controls-wrapper">
-        <div class="slide-number" id="slideNum">1 / 12</div>
+        <div class="slide-number" id="slideNum">1 / 11</div>
     </div>
 </div>
 
@@ -735,8 +735,8 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             
             if (window.MathJax) MathJax.typesetPromise();
             
-            // Initialize charts if we reach slide 10 (index 9)
-            if (currentSlide === 9 && !chartsInitialized) {
+            // Initialize charts if we reach slide 9 (index 8)
+            if (currentSlide === 8 && !chartsInitialized) {
                 initCharts();
                 updateChartsData(20); 
                 chartsInitialized = true;
@@ -870,13 +870,13 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
         }
     }
 
-    // --- Fast Native Print Function (FIXED FOR EXACT 16:9 RENDERING & CHARTS) ---
+    // --- Fast Native Print Function ---
     function printNativePDF() {
         const overlay = document.getElementById('print-overlay');
         overlay.style.display = 'flex';
         
         const originalSlide = currentSlide;
-        const resultsSlideIndex = 9; // Slide 10
+        const resultsSlideIndex = 8; // Slide 9 (0-indexed)
 
         // 1. تفعيل الشريحة الخاصة بالرسومات في الخلفية
         const resultsSlide = slides[resultsSlideIndex];
@@ -898,7 +898,7 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
             chartTimeFilt.resize(); chartFreqFilt.resize();
             updateChartsData(parseFloat(document.getElementById('fc-slider').value) || 20);
 
-            // 3. إعطاء الـ Canvas وقت ليرسم نفسه قبل التقاط الصورة
+            // 3. إعطاء الـ Canvas وقت ليرسم نفسه قبل التقاط الصورة السريعة
             setTimeout(() => {
                 // تحويل المخططات لصور ثابتة
                 document.getElementById('img-chartTimeOrg').src = chartTimeOrg.canvas.toDataURL('image/png', 1.0);
@@ -927,8 +927,8 @@ x_fourier = (<span class="code-number">4</span> * A / <span class="code-keyword"
                     window.print();
                 }, 100);
 
-            }, 500); 
-        }, 100); 
+            }, 300);
+        }, 50);
     }
 </script>
 
